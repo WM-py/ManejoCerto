@@ -1,8 +1,9 @@
 {
   "version": 2,
+  "rootDirectory": "app/frontend",
   "builds": [
     {
-      "src": "app/frontend/package.json",
+      "src": "package.json",
       "use": "@vercel/static-build"
     }
   ],
