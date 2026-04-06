@@ -1,15 +1,7 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "app/frontend/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "app/frontend/dist"
-      }
-    }
-  ],
-  "buildCommand": "cd app/frontend && npm run build",
+  "buildCommand": "cd app/frontend && npm install && npm run build",
+  "outputDirectory": "app/frontend/dist",
   "routes": [
     {
       "src": "/(.*)",
