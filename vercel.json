@@ -9,6 +9,7 @@
       }
     }
   ],
+  "outputDirectory": "app/frontend/dist",
   "routes": [
     {
       "src": "/(.*)",
