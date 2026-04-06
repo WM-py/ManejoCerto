@@ -3,13 +3,9 @@
   "builds": [
     {
       "src": "app/frontend/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "app/frontend/dist"
-      }
+      "use": "@vercel/static-build"
     }
   ],
-  "outputDirectory": "app/frontend/dist",
   "routes": [
     {
       "src": "/(.*)",
