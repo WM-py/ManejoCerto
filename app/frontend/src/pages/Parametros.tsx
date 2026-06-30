@@ -2,12 +2,11 @@ import { useState, useEffect } from 'react';
 import { supabase, TABLES } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { ParametroFazenda, FASES_MANEJO } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, Settings2, Trash2, Plus } from 'lucide-react';
+import { Loader2, Save, Settings2, Trash2, Plus, X } from 'lucide-react';
 
 export default function Parametros() {
   const { user } = useAuth();
@@ -124,17 +123,14 @@ export default function Parametros() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6 pb-8 space-y-5">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-brand rounded-xl flex items-center justify-center">
-            <Settings2 className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h2 className="text-lg font-bold text-ink-900">Parâmetros da Fazenda</h2>
-            <p className="text-xs text-gray-500">Métricas zootécnicas por fase de manejo</p>
-          </div>
+    <div className="max-w-5xl mx-auto px-4 lg:px-8 py-6 lg:py-8 pb-12 space-y-6">
+      {/* Page header */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-ink-900 tracking-tight">Parâmetros</h1>
+          <p className="text-sm text-ink-500 mt-0.5">
+            Métricas zootécnicas por fase de manejo. Edição automática ao sair do campo.
+          </p>
         </div>
         {availableFases.length > 0 && (
           <Button
@@ -142,203 +138,184 @@ export default function Parametros() {
               setNewFase(availableFases[0]);
               setShowNew(true);
             }}
-            className="bg-brand hover:bg-brand-700 text-white rounded-xl"
-            size="sm"
+            className="h-9 rounded-md bg-brand hover:bg-brand-700 text-white text-sm font-medium self-start"
           >
-            <Plus className="w-4 h-4 mr-1" />
-            Nova Fase
+            <Plus className="w-4 h-4 mr-1.5" strokeWidth={2.4} />
+            Nova fase
           </Button>
         )}
       </div>
 
-      {/* Add New Form */}
+      {/* Add new form */}
       {showNew && (
-        <Card className="rounded-2xl shadow-sm border-2 border-brand/30">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base text-brand">Nova Fase de Manejo</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label className="text-sm text-gray-600">Fase de Manejo</Label>
+        <section className="rounded-xl border border-brand/30 bg-brand/[0.03]">
+          <div className="px-5 py-3 border-b border-brand/15 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-brand">Nova fase de manejo</h3>
+            <button
+              type="button"
+              onClick={() => setShowNew(false)}
+              className="p-1 rounded hover:bg-brand/10 text-ink-500"
+              title="Cancelar"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="p-5 space-y-4">
+            <div>
+              <Label className="text-xs font-semibold text-ink-700 uppercase tracking-wider">Fase de manejo</Label>
               <select
                 value={newFase}
                 onChange={(e) => setNewFase(e.target.value)}
-                className="w-full h-12 rounded-xl border border-gray-200 px-3 text-sm bg-white"
+                className="w-full h-10 mt-1.5 rounded-md border border-ink-200 px-3 text-sm bg-white"
               >
                 {availableFases.map((f) => (
-                  <option key={f} value={f}>
-                    {f}
-                  </option>
+                  <option key={f} value={f}>{f}</option>
                 ))}
               </select>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label className="text-sm text-gray-600">Custo R$/cab/dia</Label>
+              <div>
+                <Label className="text-xs font-semibold text-ink-700 uppercase tracking-wider">Custo R$/cab/dia</Label>
                 <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0,00"
-                  value={newCusto}
-                  onChange={(e) => setNewCusto(e.target.value)}
-                  className="h-12 rounded-xl border-gray-200"
+                  type="number" step="0.01" min="0" placeholder="0,00"
+                  value={newCusto} onChange={(e) => setNewCusto(e.target.value)}
+                  className="h-10 mt-1.5 rounded-md border-ink-200 tabular-nums"
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-sm text-gray-600">GMD (kg/dia)</Label>
+              <div>
+                <Label className="text-xs font-semibold text-ink-700 uppercase tracking-wider">GMD (kg/dia)</Label>
                 <Input
-                  type="number"
-                  step="0.001"
-                  min="0"
-                  placeholder="0,000"
-                  value={newGmd}
-                  onChange={(e) => setNewGmd(e.target.value)}
-                  className="h-12 rounded-xl border-gray-200"
+                  type="number" step="0.001" min="0" placeholder="0,000"
+                  value={newGmd} onChange={(e) => setNewGmd(e.target.value)}
+                  className="h-10 mt-1.5 rounded-md border-ink-200 tabular-nums"
                 />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label className="text-sm text-gray-600">Rendimento Carcaça (%)</Label>
+              <div>
+                <Label className="text-xs font-semibold text-ink-700 uppercase tracking-wider">Rend. carcaça (%)</Label>
                 <Input
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="100"
-                  placeholder="50"
-                  value={newRendimento}
-                  onChange={(e) => setNewRendimento(e.target.value)}
-                  className="h-12 rounded-xl border-gray-200"
+                  type="number" step="0.1" min="0" max="100" placeholder="50"
+                  value={newRendimento} onChange={(e) => setNewRendimento(e.target.value)}
+                  className="h-10 mt-1.5 rounded-md border-ink-200 tabular-nums"
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-sm text-gray-600">Mortalidade (%)</Label>
+              <div>
+                <Label className="text-xs font-semibold text-ink-700 uppercase tracking-wider">Mortalidade (%)</Label>
                 <Input
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="100"
-                  placeholder="2"
-                  value={newMortalidade}
-                  onChange={(e) => setNewMortalidade(e.target.value)}
-                  className="h-12 rounded-xl border-gray-200"
+                  type="number" step="0.1" min="0" max="100" placeholder="2"
+                  value={newMortalidade} onChange={(e) => setNewMortalidade(e.target.value)}
+                  className="h-10 mt-1.5 rounded-md border-ink-200 tabular-nums"
                 />
               </div>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-2 pt-1">
               <Button
                 onClick={handleAdd}
                 disabled={addingNew}
-                className="flex-1 h-12 rounded-xl bg-brand hover:bg-brand-700 text-white font-semibold"
+                size="sm"
+                className="h-9 rounded-md bg-brand hover:bg-brand-700 text-white text-sm font-medium"
               >
-                {addingNew ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-5 h-5 mr-2" />}
-                Salvar
+                {addingNew ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <Save className="w-4 h-4 mr-1.5" />}
+                Salvar fase
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowNew(false)}
-                className="h-12 rounded-xl"
-              >
+              <Button variant="outline" size="sm" onClick={() => setShowNew(false)} className="h-9 rounded-md text-sm">
                 Cancelar
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       )}
 
-      {/* Existing Parameters */}
+      {/* Empty state */}
       {parametros.length === 0 && !showNew ? (
-        <Card className="rounded-2xl shadow-sm border-0">
-          <CardContent className="py-12 text-center">
-            <Settings2 className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500 font-medium">Nenhum parâmetro cadastrado</p>
-            <p className="text-sm text-gray-400 mt-1">
-              Adicione os parâmetros zootécnicos para cada fase de manejo
-            </p>
-          </CardContent>
-        </Card>
+        <section className="rounded-xl border border-ink-200 bg-white p-10 text-center">
+          <div className="w-12 h-12 mx-auto mb-3 bg-brand/10 rounded-lg flex items-center justify-center">
+            <Settings2 className="w-6 h-6 text-brand" />
+          </div>
+          <p className="text-sm text-ink-700 font-medium">Nenhum parâmetro cadastrado.</p>
+          <p className="text-xs text-ink-500 mt-1">Configure as fases de manejo para usar o simulador de viabilidade.</p>
+          <Button
+            onClick={() => { setNewFase(availableFases[0]); setShowNew(true); }}
+            size="sm"
+            className="mt-4 h-8 rounded-md bg-brand hover:bg-brand-700 text-white text-xs"
+          >
+            <Plus className="w-3.5 h-3.5 mr-1.5" />
+            Adicionar primeira fase
+          </Button>
+        </section>
       ) : (
-        parametros.map((param) => (
-          <Card key={param.id} className="rounded-2xl shadow-sm border-0">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base text-ink-900 flex items-center gap-2">
-                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-brand/10 text-brand text-xs font-bold">
+        <div className="grid lg:grid-cols-2 gap-4">
+          {parametros.map((param) => (
+            <section key={param.id} className="rounded-xl border border-ink-200 bg-white">
+              <div className="px-5 py-3 border-b border-ink-200 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-brand/10 text-brand text-xs font-bold">
                     {param.fase_manejo.charAt(0)}
                   </span>
-                  {param.fase_manejo}
-                </CardTitle>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDelete(param.id)}
-                  className="text-red-400 hover:text-red-600 hover:bg-red-50"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label className="text-xs text-gray-500">Custo R$/cab/dia</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    defaultValue={param.custo_diario_cabeca}
-                    onBlur={(e) => handleUpdate(param, 'custo_diario_cabeca', e.target.value)}
-                    className="h-11 rounded-xl border-gray-200"
-                  />
+                  <h3 className="text-sm font-semibold text-ink-900">{param.fase_manejo}</h3>
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs text-gray-500">GMD (kg/dia)</Label>
-                  <Input
-                    type="number"
-                    step="0.001"
-                    min="0"
-                    defaultValue={param.gmd_esperado_kg}
-                    onBlur={(e) => handleUpdate(param, 'gmd_esperado_kg', e.target.value)}
-                    className="h-11 rounded-xl border-gray-200"
-                  />
+                <div className="flex items-center gap-1">
+                  {saving === param.id && (
+                    <span className="text-[11px] text-brand flex items-center gap-1">
+                      <Loader2 className="w-3 h-3 animate-spin" /> salvando
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(param.id)}
+                    className="p-1.5 rounded hover:bg-danger-soft"
+                    title="Excluir fase"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-danger" />
+                  </button>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label className="text-xs text-gray-500">Rendimento Carcaça (%)</Label>
-                  <Input
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    max="100"
-                    defaultValue={param.rendimento_carcaca_perc}
-                    onBlur={(e) => handleUpdate(param, 'rendimento_carcaca_perc', e.target.value)}
-                    className="h-11 rounded-xl border-gray-200"
-                  />
+              <div className="p-4 space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Custo R$/cab/dia</Label>
+                    <Input
+                      type="number" step="0.01" min="0"
+                      defaultValue={param.custo_diario_cabeca}
+                      onBlur={(e) => handleUpdate(param, 'custo_diario_cabeca', e.target.value)}
+                      className="h-9 mt-1 rounded-md border-ink-200 tabular-nums text-sm"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">GMD (kg/dia)</Label>
+                    <Input
+                      type="number" step="0.001" min="0"
+                      defaultValue={param.gmd_esperado_kg}
+                      onBlur={(e) => handleUpdate(param, 'gmd_esperado_kg', e.target.value)}
+                      className="h-9 mt-1 rounded-md border-ink-200 tabular-nums text-sm"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs text-gray-500">Mortalidade (%)</Label>
-                  <Input
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    max="100"
-                    defaultValue={param.mortalidade_esperada_perc}
-                    onBlur={(e) => handleUpdate(param, 'mortalidade_esperada_perc', e.target.value)}
-                    className="h-11 rounded-xl border-gray-200"
-                  />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Rend. carcaça (%)</Label>
+                    <Input
+                      type="number" step="0.1" min="0" max="100"
+                      defaultValue={param.rendimento_carcaca_perc}
+                      onBlur={(e) => handleUpdate(param, 'rendimento_carcaca_perc', e.target.value)}
+                      className="h-9 mt-1 rounded-md border-ink-200 tabular-nums text-sm"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-[11px] font-semibold text-ink-500 uppercase tracking-wider">Mortalidade (%)</Label>
+                    <Input
+                      type="number" step="0.1" min="0" max="100"
+                      defaultValue={param.mortalidade_esperada_perc}
+                      onBlur={(e) => handleUpdate(param, 'mortalidade_esperada_perc', e.target.value)}
+                      className="h-9 mt-1 rounded-md border-ink-200 tabular-nums text-sm"
+                    />
+                  </div>
                 </div>
               </div>
-              {saving === param.id && (
-                <p className="text-xs text-brand flex items-center gap-1">
-                  <Loader2 className="w-3 h-3 animate-spin" /> Salvando...
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        ))
+            </section>
+          ))}
+        </div>
       )}
     </div>
   );

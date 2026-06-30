@@ -2,12 +2,11 @@ import { useState, useEffect } from 'react';
 import { supabase, TABLES } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Pasto, Lote } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, MapPin, Trash2, Plus, Beef } from 'lucide-react';
+import { Loader2, Save, MapPin, Trash2, Plus, Beef, X } from 'lucide-react';
 
 export default function Pastos() {
   const { user } = useAuth();
@@ -82,143 +81,182 @@ export default function Pastos() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-brand" />
+        <Loader2 className="w-6 h-6 animate-spin text-brand" />
       </div>
     );
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6 pb-8 space-y-5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-brand rounded-xl flex items-center justify-center">
-            <MapPin className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h2 className="text-lg font-bold text-ink-900">Gestão de Pastos</h2>
-            <p className="text-xs text-gray-500">Cadastre e gerencie os pastos da fazenda</p>
-          </div>
+    <div className="max-w-5xl mx-auto px-4 lg:px-8 py-6 lg:py-8 pb-12 space-y-6">
+      {/* Page header */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-ink-900 tracking-tight">Pastos</h1>
+          <p className="text-sm text-ink-500 mt-0.5">
+            Cadastre os pastos da fazenda e vincule aos lotes.
+          </p>
         </div>
         <Button
           onClick={() => setShowNew(true)}
-          className="bg-brand hover:bg-brand-700 text-white rounded-xl"
-          size="sm"
+          className="h-9 rounded-md bg-brand hover:bg-brand-700 text-white text-sm font-medium self-start"
         >
-          <Plus className="w-4 h-4 mr-1" />
-          Novo Pasto
+          <Plus className="w-4 h-4 mr-1.5" strokeWidth={2.4} />
+          Novo pasto
         </Button>
       </div>
 
+      {/* Form (inline) */}
       {showNew && (
-        <Card className="rounded-2xl shadow-sm border-2 border-brand/30">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base text-brand">Novo Pasto</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label className="text-sm text-gray-600">Nome do Pasto</Label>
-              <Input
-                placeholder="Ex: Pasto 1 - Frente"
-                value={newNome}
-                onChange={(e) => setNewNome(e.target.value)}
-                className="h-12 rounded-xl border-gray-200"
-              />
+        <section className="rounded-xl border border-brand/30 bg-brand/[0.03]">
+          <div className="px-5 py-3 border-b border-brand/15 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-brand">Novo pasto</h3>
+            <button
+              type="button"
+              onClick={() => setShowNew(false)}
+              className="p-1 rounded hover:bg-brand/10 text-ink-500"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="p-5 space-y-3">
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs font-semibold text-ink-700 uppercase tracking-wider">Nome do pasto</Label>
+                <Input
+                  placeholder="Ex: Pasto 1 - Frente"
+                  value={newNome}
+                  onChange={(e) => setNewNome(e.target.value)}
+                  className="h-10 mt-1 rounded-md border-ink-200"
+                />
+              </div>
+              <div>
+                <Label className="text-xs font-semibold text-ink-700 uppercase tracking-wider">Capacidade (cabeças)</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  placeholder="0"
+                  value={newCapacidade}
+                  onChange={(e) => setNewCapacidade(e.target.value)}
+                  className="h-10 mt-1 rounded-md border-ink-200 tabular-nums"
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-sm text-gray-600">Capacidade (cabeças)</Label>
-              <Input
-                type="number"
-                min="1"
-                placeholder="0"
-                value={newCapacidade}
-                onChange={(e) => setNewCapacidade(e.target.value)}
-                className="h-12 rounded-xl border-gray-200"
-              />
-            </div>
-            <div className="flex gap-3">
+            <div className="flex gap-2 pt-1">
               <Button
                 onClick={handleAdd}
                 disabled={addingNew}
-                className="flex-1 h-12 rounded-xl bg-brand hover:bg-brand-700 text-white font-semibold"
+                size="sm"
+                className="h-9 rounded-md bg-brand hover:bg-brand-700 text-white text-sm font-medium"
               >
-                {addingNew ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-5 h-5 mr-2" />}
-                Salvar
+                {addingNew ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <Save className="w-4 h-4 mr-1.5" />}
+                Salvar pasto
               </Button>
-              <Button variant="outline" onClick={() => setShowNew(false)} className="h-12 rounded-xl">
+              <Button
+                variant="outline"
+                onClick={() => setShowNew(false)}
+                size="sm"
+                className="h-9 rounded-md text-sm"
+              >
                 Cancelar
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       )}
 
+      {/* List */}
       {pastos.length === 0 && !showNew ? (
-        <Card className="rounded-2xl shadow-sm border-0">
-          <CardContent className="py-12 text-center">
-            <MapPin className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500 font-medium">Nenhum pasto cadastrado</p>
-            <p className="text-sm text-gray-400 mt-1">Adicione pastos para vincular aos seus lotes</p>
-          </CardContent>
-        </Card>
+        <section className="rounded-xl border border-ink-200 bg-white p-10 text-center">
+          <div className="w-12 h-12 mx-auto mb-3 bg-brand/10 rounded-lg flex items-center justify-center">
+            <MapPin className="w-6 h-6 text-brand" />
+          </div>
+          <p className="text-sm text-ink-700 font-medium">Nenhum pasto cadastrado.</p>
+          <p className="text-xs text-ink-500 mt-1">Adicione pastos para vincular aos seus lotes.</p>
+          <Button
+            onClick={() => setShowNew(true)}
+            size="sm"
+            className="mt-4 h-8 rounded-md bg-brand hover:bg-brand-700 text-white text-xs"
+          >
+            <Plus className="w-3.5 h-3.5 mr-1.5" />
+            Adicionar primeiro pasto
+          </Button>
+        </section>
       ) : (
-        pastos.map((pasto) => {
-          const cabecas = getCabecasNoPasto(pasto.id);
-          const lotesVinculados = getLotesNoPasto(pasto.id);
-          const ocupacao = pasto.capacidade_cabecas > 0 ? (cabecas / pasto.capacidade_cabecas) * 100 : 0;
-          return (
-            <Card key={pasto.id} className="rounded-2xl shadow-sm border-0">
-              <CardContent className="p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-brand/10 rounded-xl flex items-center justify-center">
-                      <MapPin className="w-5 h-5 text-brand" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-ink-900">{pasto.nome_pasto}</p>
-                      <p className="text-xs text-gray-400">Capacidade: {pasto.capacidade_cabecas} cabeças</p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDelete(pasto.id)}
-                    className="text-red-400 hover:text-red-600 hover:bg-red-50"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-
-                {/* Occupation bar */}
-                <div className="mb-3">
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="text-gray-500">{cabecas} / {pasto.capacidade_cabecas} cabeças</span>
-                    <span className={`font-semibold ${ocupacao > 90 ? 'text-red-500' : ocupacao > 70 ? 'text-amber-500' : 'text-green-600'}`}>
-                      {ocupacao.toFixed(0)}%
-                    </span>
-                  </div>
-                  <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all ${ocupacao > 90 ? 'bg-red-500' : ocupacao > 70 ? 'bg-amber-500' : 'bg-brand'}`}
-                      style={{ width: `${Math.min(ocupacao, 100)}%` }}
-                    />
-                  </div>
-                </div>
-
-                {lotesVinculados.length > 0 && (
-                  <div className="space-y-1">
-                    {lotesVinculados.map((l) => (
-                      <div key={l.id} className="flex items-center gap-2 text-xs bg-gray-50 rounded-lg px-3 py-2">
-                        <Beef className="w-3 h-3 text-brand" />
-                        <span className="text-ink-900 font-medium">{l.nome_lote}</span>
-                        <span className="text-gray-400">({l.qtd_cabecas - l.qtd_cabecas_vendidas} cab.)</span>
+        <div className="grid sm:grid-cols-2 gap-4">
+          {pastos.map((pasto) => {
+            const cabecas = getCabecasNoPasto(pasto.id);
+            const lotesVinculados = getLotesNoPasto(pasto.id);
+            const ocupacao = pasto.capacidade_cabecas > 0 ? (cabecas / pasto.capacidade_cabecas) * 100 : 0;
+            const ocupacaoTone =
+              ocupacao > 90 ? { bar: 'bg-danger', text: 'text-danger' } :
+              ocupacao > 70 ? { bar: 'bg-warning', text: 'text-warning' } :
+                              { bar: 'bg-success', text: 'text-success' };
+            return (
+              <section key={pasto.id} className="rounded-xl border border-ink-200 bg-white overflow-hidden">
+                <div className="p-5">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-9 h-9 rounded-md bg-brand/10 flex items-center justify-center flex-shrink-0">
+                        <MapPin className="w-4 h-4 text-brand" strokeWidth={2.2} />
                       </div>
-                    ))}
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-ink-900 truncate">{pasto.nome_pasto}</p>
+                        <p className="text-xs text-ink-500 tabular-nums">
+                          Capacidade {pasto.capacidade_cabecas} cab.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(pasto.id)}
+                      className="p-1.5 rounded hover:bg-danger-soft"
+                      title="Excluir"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-danger" />
+                    </button>
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })
+
+                  {/* Ocupação */}
+                  <div className="mb-3">
+                    <div className="flex justify-between items-baseline text-xs mb-1.5">
+                      <span className="text-ink-500 tabular-nums">
+                        {cabecas} / {pasto.capacidade_cabecas} cab.
+                      </span>
+                      <span className={`font-semibold tabular-nums ${ocupacaoTone.text}`}>
+                        {ocupacao.toFixed(0)}%
+                      </span>
+                    </div>
+                    <div className="w-full h-1.5 bg-ink-100 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${ocupacaoTone.bar}`}
+                        style={{ width: `${Math.min(ocupacao, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {lotesVinculados.length > 0 ? (
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-400 mb-1">
+                        Lotes vinculados
+                      </p>
+                      {lotesVinculados.map((l) => (
+                        <div key={l.id} className="flex items-center gap-2 text-xs bg-ink-100/60 rounded-md px-2.5 py-1.5">
+                          <Beef className="w-3 h-3 text-brand flex-shrink-0" />
+                          <span className="text-ink-900 font-medium truncate flex-1">{l.nome_lote}</span>
+                          <span className="text-ink-500 tabular-nums whitespace-nowrap">
+                            {l.qtd_cabecas - l.qtd_cabecas_vendidas} cab.
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-ink-400 italic">Sem lotes vinculados.</p>
+                  )}
+                </div>
+              </section>
+            );
+          })}
+        </div>
       )}
     </div>
   );

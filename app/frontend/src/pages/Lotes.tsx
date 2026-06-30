@@ -4,9 +4,9 @@ import { supabase, TABLES, formatDate } from '@/lib/supabase';
 import { Lote, SexoLote, calcularCategoria } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   AlertDialog,
@@ -19,7 +19,7 @@ import {
   AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Beef, Scale, History, Pencil, Trash2 } from 'lucide-react';
+import { Beef, Scale, History, Pencil, Trash2, Plus, ArrowRight } from 'lucide-react';
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
@@ -243,170 +243,194 @@ export default function Lotes() {
     await fetchLotes();
   };
 
-  const LoteCard = ({ lote }: { lote: Lote }) => (
-    <div className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-brand/5 rounded-xl transition-colors">
-      <button
-        onClick={() => navigate(`/lote/${lote.id}`)}
-        className="flex-1 text-left flex items-center gap-3"
-      >
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-          lote.status === 'ativo' ? 'bg-brand/10' : 'bg-gray-200'
-        }`}>
-          <Beef className={`w-6 h-6 ${lote.status === 'ativo' ? 'text-brand' : 'text-gray-400'}`} />
-        </div>
-        <div>
-          <div className="flex items-center gap-2">
-            <p className="font-semibold text-ink-900">{lote.nome_lote}</p>
-            <Badge
-              className={`rounded-full text-[10px] px-2 py-0 ${
-                lote.status === 'ativo'
-                  ? 'bg-green-50 text-green-600 border-green-200'
-                  : 'bg-gray-100 text-gray-500 border-gray-200'
-              }`}
-            >
-              {lote.status}
-            </Badge>
+  const LoteRow = ({ lote }: { lote: Lote }) => (
+    <li className="px-5 py-3.5 hover:bg-ink-100/40 group">
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => navigate(`/lote/${lote.id}`)}
+          className="flex-1 text-left flex items-center gap-3 min-w-0"
+        >
+          <div className={`w-9 h-9 rounded-md flex items-center justify-center flex-shrink-0 ${
+            lote.status === 'ativo' ? 'bg-brand/10' : 'bg-ink-100'
+          }`}>
+            <Beef className={`w-4 h-4 ${lote.status === 'ativo' ? 'text-brand' : 'text-ink-400'}`} strokeWidth={2.2} />
           </div>
-          <p className="text-xs text-gray-400 mt-0.5">
-            {lote.qtd_cabecas} cabeças • {lote.qtd_cabecas_vendidas} vendidas • Entrada: {formatDate(lote.data_entrada)}
-          </p>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <p className="font-semibold text-ink-900 text-sm truncate">{lote.nome_lote}</p>
+              {lote.sexo && (
+                <Badge variant="outline" className="rounded-full text-[10px] px-1.5 py-0 border-ink-200 text-ink-500 font-medium">
+                  {lote.sexo}
+                </Badge>
+              )}
+              {lote.categoria && (
+                <Badge variant="outline" className="rounded-full text-[10px] px-1.5 py-0 border-ink-200 text-ink-500 font-medium">
+                  {lote.categoria}
+                </Badge>
+              )}
+            </div>
+            <p className="text-xs text-ink-500 mt-0.5">
+              <span className="tabular-nums">{lote.qtd_cabecas}</span> cab. ·{' '}
+              <span className="tabular-nums">{lote.qtd_cabecas_vendidas}</span> vendidas · Entrada {formatDate(lote.data_entrada)}
+            </p>
+          </div>
+          <ArrowRight className="w-4 h-4 text-ink-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+        </button>
+        <div className="flex items-center gap-0.5">
+          <button
+            type="button"
+            onClick={() => openEditLote(lote)}
+            className="p-1.5 rounded hover:bg-ink-200"
+            title="Editar"
+          >
+            <Pencil className="w-3.5 h-3.5 text-ink-500" />
+          </button>
+          <button
+            type="button"
+            onClick={() => openDeleteLote(lote)}
+            className="p-1.5 rounded hover:bg-danger-soft"
+            title="Excluir"
+          >
+            <Trash2 className="w-3.5 h-3.5 text-danger" />
+          </button>
         </div>
-      </button>
-      <div className="flex items-center gap-1 ml-3">
-        <button
-          type="button"
-          onClick={() => openEditLote(lote)}
-          className="p-1 rounded-md hover:bg-gray-100"
-        >
-          <Pencil className="w-4 h-4 text-gray-500" />
-        </button>
-        <button
-          type="button"
-          onClick={() => openDeleteLote(lote)}
-          className="p-1 rounded-md hover:bg-gray-100"
-        >
-          <Trash2 className="w-4 h-4 text-red-500" />
-        </button>
       </div>
-    </div>
+    </li>
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6 pb-8">
-      <Button
-        onClick={() => navigate('/compra-venda')}
-        className="w-full h-14 rounded-2xl bg-brand hover:bg-brand-700 text-white font-semibold mb-6 shadow-lg"
-      >
-        <Scale className="w-5 h-5 mr-2" />
-        Nova Compra de Gado
-      </Button>
+    <div className="max-w-7xl mx-auto px-4 lg:px-8 py-6 lg:py-8 pb-12 space-y-6">
+      {/* Page header */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-ink-900 tracking-tight">Lotes</h1>
+          <p className="text-sm text-ink-500 mt-0.5">
+            Gerencie os lotes ativos e consulte o histórico encerrado.
+          </p>
+        </div>
+        <Button
+          onClick={() => navigate('/compra-venda')}
+          className="h-9 rounded-md bg-brand hover:bg-brand-700 text-white text-sm font-medium self-start"
+        >
+          <Plus className="w-4 h-4 mr-1.5" strokeWidth={2.4} />
+          Nova compra de gado
+        </Button>
+      </div>
 
       <Tabs defaultValue="ativos">
-        <TabsList className="w-full bg-white rounded-xl shadow-sm border-0 h-12 p-1">
+        <TabsList className="bg-white border border-ink-200 rounded-md h-9 p-0.5">
           <TabsTrigger
             value="ativos"
-            className="flex-1 rounded-lg data-[state=active]:bg-brand data-[state=active]:text-white h-10 font-semibold"
+            className="rounded-[5px] data-[state=active]:bg-brand data-[state=active]:text-white text-sm h-8 px-4 font-medium"
           >
-            <Beef className="w-4 h-4 mr-2" />
-            Ativos ({lotesAtivos.length})
+            <Beef className="w-3.5 h-3.5 mr-1.5" />
+            Ativos
+            <span className="ml-1.5 text-[11px] opacity-80 tabular-nums">{lotesAtivos.length}</span>
           </TabsTrigger>
           <TabsTrigger
             value="historico"
-            className="flex-1 rounded-lg data-[state=active]:bg-ink-900 data-[state=active]:text-white h-10 font-semibold"
+            className="rounded-[5px] data-[state=active]:bg-ink-900 data-[state=active]:text-white text-sm h-8 px-4 font-medium"
           >
-            <History className="w-4 h-4 mr-2" />
-            Histórico ({lotesEncerrados.length})
+            <History className="w-3.5 h-3.5 mr-1.5" />
+            Histórico
+            <span className="ml-1.5 text-[11px] opacity-80 tabular-nums">{lotesEncerrados.length}</span>
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="ativos" className="mt-4">
-          <Card className="rounded-2xl shadow-sm border-0 bg-white">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold text-ink-900">Lotes Ativos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <p className="text-center py-8 text-gray-400">Carregando...</p>
-              ) : lotesAtivos.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="w-20 h-20 mx-auto mb-3 bg-brand/10 rounded-2xl flex items-center justify-center">
-                    <Beef className="w-10 h-10 text-brand/30" />
-                  </div>
-                  <p className="text-gray-400 text-sm">Nenhum lote ativo</p>
+          <section className="rounded-xl border border-ink-200 bg-white">
+            <div className="px-5 py-4 border-b border-ink-200">
+              <h3 className="text-sm font-semibold text-ink-900">Lotes ativos</h3>
+              <p className="text-xs text-ink-500 mt-0.5">{lotesAtivos.length} em manejo</p>
+            </div>
+            {loading ? (
+              <div className="p-8 text-center text-sm text-ink-400">Carregando...</div>
+            ) : lotesAtivos.length === 0 ? (
+              <div className="p-10 text-center">
+                <div className="w-12 h-12 mx-auto mb-3 bg-brand/10 rounded-lg flex items-center justify-center">
+                  <Beef className="w-6 h-6 text-brand" />
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  {lotesAtivos.map((lote) => (
-                    <LoteCard key={lote.id} lote={lote} />
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                <p className="text-sm text-ink-700 font-medium">Nenhum lote ativo no momento.</p>
+                <p className="text-xs text-ink-500 mt-1">Registre uma compra de gado para começar a acompanhar.</p>
+                <Button
+                  onClick={() => navigate('/compra-venda')}
+                  size="sm"
+                  className="mt-4 h-8 rounded-md bg-brand hover:bg-brand-700 text-white text-xs"
+                >
+                  <Scale className="w-3.5 h-3.5 mr-1.5" />
+                  Registrar compra
+                </Button>
+              </div>
+            ) : (
+              <ul className="divide-y divide-ink-200">
+                {lotesAtivos.map((lote) => <LoteRow key={lote.id} lote={lote} />)}
+              </ul>
+            )}
+          </section>
         </TabsContent>
 
         <TabsContent value="historico" className="mt-4">
-          <Card className="rounded-2xl shadow-sm border-0 bg-white">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold text-ink-900">Lotes Encerrados</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <p className="text-center py-8 text-gray-400">Carregando...</p>
-              ) : lotesEncerrados.length === 0 ? (
-                <p className="text-center py-8 text-gray-400 text-sm">Nenhum lote encerrado</p>
-              ) : (
-                <div className="space-y-3">
-                  {lotesEncerrados.map((lote) => (
-                    <LoteCard key={lote.id} lote={lote} />
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <section className="rounded-xl border border-ink-200 bg-white">
+            <div className="px-5 py-4 border-b border-ink-200">
+              <h3 className="text-sm font-semibold text-ink-900">Lotes encerrados</h3>
+              <p className="text-xs text-ink-500 mt-0.5">{lotesEncerrados.length} no histórico</p>
+            </div>
+            {loading ? (
+              <div className="p-8 text-center text-sm text-ink-400">Carregando...</div>
+            ) : lotesEncerrados.length === 0 ? (
+              <div className="p-10 text-center">
+                <History className="w-10 h-10 text-ink-200 mx-auto mb-2" />
+                <p className="text-sm text-ink-500">Nenhum lote encerrado ainda.</p>
+              </div>
+            ) : (
+              <ul className="divide-y divide-ink-200">
+                {lotesEncerrados.map((lote) => <LoteRow key={lote.id} lote={lote} />)}
+              </ul>
+            )}
+          </section>
         </TabsContent>
       </Tabs>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Editar Lote</DialogTitle>
+            <DialogTitle>Editar lote</DialogTitle>
             <DialogDescription>Atualize os dados do lote.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-3 pt-2">
             <div>
-              <label className="text-sm font-medium text-gray-700">Nome do Lote</label>
-              <input
-                className="w-full h-10 border rounded-lg p-2"
+              <label className="text-xs font-semibold text-ink-700 uppercase tracking-wider">Nome do lote</label>
+              <Input
+                className="mt-1 h-10 rounded-md border-ink-200"
                 value={editNomeLote}
                 onChange={(e) => setEditNomeLote(e.target.value)}
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700">Qtd. Cabeças</label>
-              <input
+              <label className="text-xs font-semibold text-ink-700 uppercase tracking-wider">Qtd. cabeças</label>
+              <Input
                 type="number"
                 min="1"
-                className="w-full h-10 border rounded-lg p-2"
+                className="mt-1 h-10 rounded-md border-ink-200 tabular-nums"
                 value={editQtdCabecas}
                 onChange={(e) => setEditQtdCabecas(e.target.value)}
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700">Status</label>
+              <label className="text-xs font-semibold text-ink-700 uppercase tracking-wider">Status</label>
               <select
-                className="w-full h-10 border rounded-lg p-2"
+                className="w-full mt-1 h-10 border border-ink-200 rounded-md px-3 text-sm bg-white"
                 value={editStatus}
                 onChange={(e) => setEditStatus(e.target.value as 'ativo' | 'encerrado')}
               >
-                <option value="ativo">ativo</option>
-                <option value="encerrado">encerrado</option>
+                <option value="ativo">Ativo</option>
+                <option value="encerrado">Encerrado</option>
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700">Sexo</label>
+              <label className="text-xs font-semibold text-ink-700 uppercase tracking-wider">Sexo</label>
               <select
-                className="w-full h-10 border rounded-lg p-2"
+                className="w-full mt-1 h-10 border border-ink-200 rounded-md px-3 text-sm bg-white"
                 value={editSexo}
                 onChange={(e) => setEditSexo(e.target.value as SexoLote)}
               >
@@ -417,10 +441,8 @@ export default function Lotes() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleUpdateLote}>Salvar</Button>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleUpdateLote} className="bg-brand hover:bg-brand-700">Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -435,7 +457,11 @@ export default function Lotes() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deletingLote}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteLote} disabled={deletingLote}>
+            <AlertDialogAction
+              onClick={handleDeleteLote}
+              disabled={deletingLote}
+              className="bg-danger hover:bg-danger/90"
+            >
               {deletingLote ? 'Excluindo...' : 'Excluir'}
             </AlertDialogAction>
           </AlertDialogFooter>
