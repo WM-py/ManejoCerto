@@ -266,7 +266,7 @@ export default function LoteDetalhe() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#556B2F]" />
+        <Loader2 className="w-8 h-8 animate-spin text-brand" />
       </div>
     );
   }
@@ -393,10 +393,10 @@ export default function LoteDetalhe() {
             onClick={() => navigate('/lotes')}
             className="rounded-xl border-gray-200 h-10 w-10"
           >
-            <ArrowLeft className="w-5 h-5 text-[#36454F]" />
+            <ArrowLeft className="w-5 h-5 text-ink-900" />
           </Button>
           <div>
-            <h2 className="text-xl font-bold text-[#36454F]">{lote.nome_lote}</h2>
+            <h2 className="text-xl font-bold text-ink-900">{lote.nome_lote}</h2>
             <div className="flex items-center gap-2 mt-1">
               {lote.sexo && (
                 <Badge className="bg-green-100 text-green-700 px-2 py-0.5 text-xs font-semibold">
@@ -428,13 +428,13 @@ export default function LoteDetalhe() {
         <CardContent className="p-5">
           <div className="grid grid-cols-5 gap-2 text-center">
             <div>
-              <Beef className="w-5 h-5 mx-auto text-[#556B2F] mb-1" />
-              <p className="text-lg font-bold text-[#36454F]">{lote.qtd_cabecas}</p>
+              <Beef className="w-5 h-5 mx-auto text-brand mb-1" />
+              <p className="text-lg font-bold text-ink-900">{lote.qtd_cabecas}</p>
               <p className="text-[10px] text-gray-400">Cabeças</p>
             </div>
             <div>
               <TrendingUp className="w-5 h-5 mx-auto text-green-500 mb-1" />
-              <p className="text-lg font-bold text-[#36454F]">{lote.qtd_cabecas_vendidas}</p>
+              <p className="text-lg font-bold text-ink-900">{lote.qtd_cabecas_vendidas}</p>
               <p className="text-[10px] text-gray-400">Vendidas</p>
             </div>
             <div>
@@ -444,12 +444,12 @@ export default function LoteDetalhe() {
             </div>
             <div>
               <Target className="w-5 h-5 mx-auto text-amber-500 mb-1" />
-              <p className="text-lg font-bold text-[#36454F]">{cabecasVivas}</p>
+              <p className="text-lg font-bold text-ink-900">{cabecasVivas}</p>
               <p className="text-[10px] text-gray-400">Vivas</p>
             </div>
             <div>
               <Calendar className="w-5 h-5 mx-auto text-blue-500 mb-1" />
-              <p className="text-lg font-bold text-[#36454F]">
+              <p className="text-lg font-bold text-ink-900">
                 {daysBetween(lote.data_entrada, new Date().toISOString().split('T')[0])}
               </p>
               <p className="text-[10px] text-gray-400">Dias</p>
@@ -463,7 +463,7 @@ export default function LoteDetalhe() {
         <Card className="rounded-2xl shadow-sm border-0 bg-white">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-semibold text-[#36454F] flex items-center gap-2">
+              <CardTitle className="text-base font-semibold text-ink-900 flex items-center gap-2">
                 <Skull className="w-5 h-5 text-red-400" />
                 Baixas (Mortalidade)
               </CardTitle>
@@ -593,15 +593,15 @@ export default function LoteDetalhe() {
       <Card className="rounded-2xl shadow-sm border-0 bg-white">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-semibold text-[#36454F] flex items-center gap-2">
-              <Scale className="w-5 h-5 text-[#556B2F]" />
+            <CardTitle className="text-base font-semibold text-ink-900 flex items-center gap-2">
+              <Scale className="w-5 h-5 text-brand" />
               Pesagens do Lote (Peso Total)
             </CardTitle>
             {lote.status === 'ativo' && (
               <Button
                 size="sm"
                 onClick={() => setShowPesagemLoteForm(!showPesagemLoteForm)}
-                className="rounded-xl bg-[#556B2F] hover:bg-[#3D4F22] text-white text-xs h-8"
+                className="rounded-xl bg-brand hover:bg-brand-700 text-white text-xs h-8"
               >
                 <Plus className="w-3 h-3 mr-1" />
                 Nova Pesagem
@@ -611,7 +611,7 @@ export default function LoteDetalhe() {
         </CardHeader>
         <CardContent className="space-y-3">
           {showPesagemLoteForm && (
-            <div className="bg-[#556B2F]/5 rounded-xl p-4 border border-[#556B2F]/10 space-y-3">
+            <div className="bg-brand/5 rounded-xl p-4 border border-brand/10 space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs text-gray-600">Peso Total do Lote (kg)</Label>
@@ -638,7 +638,7 @@ export default function LoteDetalhe() {
               {Number(pesagemLotePesoTotal) > 0 && cabecasVivas > 0 && (
                 <div className="flex items-center justify-between text-xs bg-white/60 rounded-lg p-2">
                   <span className="text-gray-500">Peso Médio/cab</span>
-                  <span className="font-bold text-[#556B2F]">
+                  <span className="font-bold text-brand">
                     {(Number(pesagemLotePesoTotal) / cabecasVivas).toFixed(1)} kg ({kgToArrobas(Number(pesagemLotePesoTotal) / cabecasVivas).toFixed(2)} @)
                   </span>
                 </div>
@@ -647,7 +647,7 @@ export default function LoteDetalhe() {
                 <Button
                   onClick={handleRegistrarPesagemLote}
                   disabled={savingPesagemLote}
-                  className="flex-1 h-10 rounded-xl bg-[#556B2F] hover:bg-[#3D4F22] text-white text-sm"
+                  className="flex-1 h-10 rounded-xl bg-brand hover:bg-brand-700 text-white text-sm"
                 >
                   {savingPesagemLote ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Scale className="w-4 h-4 mr-1" />}
                   Salvar
@@ -663,7 +663,7 @@ export default function LoteDetalhe() {
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-gray-50 rounded-xl p-3 text-center">
               <p className="text-[10px] text-gray-400 mb-1">Peso Entrada</p>
-              <p className="text-sm font-bold text-[#36454F]">
+              <p className="text-sm font-bold text-ink-900">
                 {Number(lote.peso_entrada_kg) > 0 ? `${Number(lote.peso_entrada_kg).toFixed(1)} kg` : '—'}
               </p>
               <p className="text-[10px] text-gray-400">
@@ -672,7 +672,7 @@ export default function LoteDetalhe() {
             </div>
             <div className="bg-gray-50 rounded-xl p-3 text-center">
               <p className="text-[10px] text-gray-400 mb-1">Peso Atual</p>
-              <p className="text-sm font-bold text-[#556B2F]">
+              <p className="text-sm font-bold text-brand">
                 {pesoAtualMedio > 0 ? `${pesoAtualMedio.toFixed(1)} kg` : '—'}
               </p>
               <p className="text-[10px] text-gray-400">
@@ -708,13 +708,13 @@ export default function LoteDetalhe() {
                 return (
                   <div key={p.id} className="flex items-center justify-between gap-3 p-2 bg-gray-50 rounded-lg text-xs">
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-[#556B2F]/10 flex items-center justify-center text-[10px] font-bold text-[#556B2F]">
+                      <div className="w-6 h-6 rounded-full bg-brand/10 flex items-center justify-center text-[10px] font-bold text-brand">
                         {idx + 1}
                       </div>
                       <span className="text-gray-500">{formatDate(p.data_pesagem)}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="font-semibold text-[#36454F]">
+                      <span className="font-semibold text-ink-900">
                         {Number(p.peso_total_kg).toFixed(0)} kg (méd: {pesoMedio.toFixed(1)} kg)
                       </span>
                       {gmdItem > 0 && (
@@ -749,15 +749,15 @@ export default function LoteDetalhe() {
       <Card className="rounded-2xl shadow-sm border-0 bg-white">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-semibold text-[#36454F] flex items-center gap-2">
-              <Weight className="w-5 h-5 text-[#556B2F]" />
+            <CardTitle className="text-base font-semibold text-ink-900 flex items-center gap-2">
+              <Weight className="w-5 h-5 text-brand" />
               Pesagens Individuais (Peso Médio)
             </CardTitle>
             {lote.status === 'ativo' && (
               <Button
                 size="sm"
                 onClick={() => setShowPesagemForm(!showPesagemForm)}
-                className="rounded-xl bg-[#556B2F] hover:bg-[#3D4F22] text-white text-xs h-8"
+                className="rounded-xl bg-brand hover:bg-brand-700 text-white text-xs h-8"
               >
                 <Plus className="w-3 h-3 mr-1" />
                 Registrar
@@ -767,7 +767,7 @@ export default function LoteDetalhe() {
         </CardHeader>
         <CardContent className="space-y-3">
           {showPesagemForm && (
-            <div className="bg-[#556B2F]/5 rounded-xl p-4 border border-[#556B2F]/10 space-y-3">
+            <div className="bg-brand/5 rounded-xl p-4 border border-brand/10 space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs text-gray-600">Peso Médio (kg/cab)</Label>
@@ -794,7 +794,7 @@ export default function LoteDetalhe() {
               {Number(pesagemPeso) > 0 && (
                 <div className="flex items-center justify-between text-xs bg-white/60 rounded-lg p-2">
                   <span className="text-gray-500">Equivalente em @</span>
-                  <span className="font-bold text-[#556B2F]">
+                  <span className="font-bold text-brand">
                     {kgToArrobas(Number(pesagemPeso)).toFixed(2)} @/cab
                   </span>
                 </div>
@@ -803,7 +803,7 @@ export default function LoteDetalhe() {
                 <Button
                   onClick={handleRegistrarPesagem}
                   disabled={savingPesagem}
-                  className="flex-1 h-10 rounded-xl bg-[#556B2F] hover:bg-[#3D4F22] text-white text-sm"
+                  className="flex-1 h-10 rounded-xl bg-brand hover:bg-brand-700 text-white text-sm"
                 >
                   {savingPesagem ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Scale className="w-4 h-4 mr-1" />}
                   Salvar
@@ -820,13 +820,13 @@ export default function LoteDetalhe() {
               {pesagens.map((p, idx) => (
                 <div key={p.id} className="flex items-center justify-between gap-3 p-2 bg-gray-50 rounded-lg text-xs">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-[#556B2F]/10 flex items-center justify-center text-[10px] font-bold text-[#556B2F]">
+                    <div className="w-6 h-6 rounded-full bg-brand/10 flex items-center justify-center text-[10px] font-bold text-brand">
                       {idx + 1}
                     </div>
                     <span className="text-gray-500">{formatDate(p.data_pesagem)}</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="font-semibold text-[#36454F]">
+                    <span className="font-semibold text-ink-900">
                       {Number(p.peso_media_kg).toFixed(1)} kg ({kgToArrobas(Number(p.peso_media_kg)).toFixed(2)} @)
                     </span>
                     {Number(p.gmd_calculado) > 0 && (
@@ -859,8 +859,8 @@ export default function LoteDetalhe() {
       {/* DRE Summary */}
       <Card className="rounded-2xl shadow-sm border-0 bg-white">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base font-semibold text-[#36454F] flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-[#556B2F]" />
+          <CardTitle className="text-base font-semibold text-ink-900 flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-brand" />
             DRE - Demonstrativo de Resultado
           </CardTitle>
         </CardHeader>
@@ -902,28 +902,28 @@ export default function LoteDetalhe() {
           </div>
 
           {lote.status === 'encerrado' ? (
-            <div className={`rounded-xl p-4 ${lucroLiquido >= 0 ? 'bg-[#556B2F]/10' : 'bg-red-100'}`}>
+            <div className={`rounded-xl p-4 ${lucroLiquido >= 0 ? 'bg-brand/10' : 'bg-red-100'}`}>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <DollarSign className={`w-5 h-5 ${lucroLiquido >= 0 ? 'text-[#556B2F]' : 'text-red-600'}`} />
-                  <span className={`text-sm font-medium ${lucroLiquido >= 0 ? 'text-[#556B2F]' : 'text-red-800'}`}>
+                  <DollarSign className={`w-5 h-5 ${lucroLiquido >= 0 ? 'text-brand' : 'text-red-600'}`} />
+                  <span className={`text-sm font-medium ${lucroLiquido >= 0 ? 'text-brand' : 'text-red-800'}`}>
                     Lucro Líquido Real
                   </span>
                 </div>
-                <span className={`text-xl font-bold ${lucroLiquido >= 0 ? 'text-[#556B2F]' : 'text-red-600'}`}>
+                <span className={`text-xl font-bold ${lucroLiquido >= 0 ? 'text-brand' : 'text-red-600'}`}>
                   {formatBRL(lucroLiquido)}
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-white/60 rounded-lg p-3 text-center">
                   <p className="text-xs text-gray-500">Lucro por Cabeça</p>
-                  <p className={`text-lg font-bold ${lucroPorCabeca >= 0 ? 'text-[#556B2F]' : 'text-red-600'}`}>
+                  <p className={`text-lg font-bold ${lucroPorCabeca >= 0 ? 'text-brand' : 'text-red-600'}`}>
                     {formatBRL(lucroPorCabeca)}
                   </p>
                 </div>
                 <div className="bg-white/60 rounded-lg p-3 text-center">
                   <p className="text-xs text-gray-500">Margem de Lucro</p>
-                  <p className={`text-lg font-bold ${margemLucro >= 0 ? 'text-[#556B2F]' : 'text-red-600'}`}>
+                  <p className={`text-lg font-bold ${margemLucro >= 0 ? 'text-brand' : 'text-red-600'}`}>
                     {margemLucro.toFixed(1)}%
                   </p>
                 </div>
@@ -947,13 +947,13 @@ export default function LoteDetalhe() {
                 <div className="grid grid-cols-2 gap-3 mt-3">
                   <div className="bg-white/60 rounded-lg p-3 text-center">
                     <p className="text-xs text-gray-500">Lucro Parcial</p>
-                    <p className={`text-lg font-bold ${lucroLiquido >= 0 ? 'text-[#556B2F]' : 'text-red-600'}`}>
+                    <p className={`text-lg font-bold ${lucroLiquido >= 0 ? 'text-brand' : 'text-red-600'}`}>
                       {formatBRL(lucroLiquido)}
                     </p>
                   </div>
                   <div className="bg-white/60 rounded-lg p-3 text-center">
                     <p className="text-xs text-gray-500">Lucro/Cabeça (parcial)</p>
-                    <p className={`text-lg font-bold ${lucroPorCabeca >= 0 ? 'text-[#556B2F]' : 'text-red-600'}`}>
+                    <p className={`text-lg font-bold ${lucroPorCabeca >= 0 ? 'text-brand' : 'text-red-600'}`}>
                       {formatBRL(lucroPorCabeca)}
                     </p>
                   </div>
@@ -967,7 +967,7 @@ export default function LoteDetalhe() {
       {/* Despesas Vinculadas */}
       <Card className="rounded-2xl shadow-sm border-0 bg-white">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base font-semibold text-[#36454F]">
+          <CardTitle className="text-base font-semibold text-ink-900">
             Despesas Vinculadas ao Lote
           </CardTitle>
         </CardHeader>
@@ -983,7 +983,7 @@ export default function LoteDetalhe() {
                       <TrendingDown className="w-4 h-4 text-red-500" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-[#36454F]">
+                      <p className="text-sm font-medium text-ink-900">
                         {t.descricao || CATEGORIA_LABELS[t.categoria as CategoriaTransacao]}
                       </p>
                       <p className="text-xs text-gray-400">
@@ -1005,8 +1005,8 @@ export default function LoteDetalhe() {
       {(compras.length > 0 || vendas.length > 0) && (
         <Card className="rounded-2xl shadow-sm border-0 bg-white">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold text-[#36454F] flex items-center gap-2">
-              <Scale className="w-5 h-5 text-[#556B2F]" />
+            <CardTitle className="text-base font-semibold text-ink-900 flex items-center gap-2">
+              <Scale className="w-5 h-5 text-brand" />
               Compras & Vendas
             </CardTitle>
           </CardHeader>
@@ -1018,7 +1018,7 @@ export default function LoteDetalhe() {
               return (
                 <div key={cv.id} className="p-3 bg-gray-50 rounded-xl">
                   <div className="flex items-center justify-between mb-2">
-                    <Badge className={`rounded-full text-xs ${isCompra ? 'bg-[#556B2F]/10 text-[#556B2F]' : 'bg-green-50 text-green-600'}`}>
+                    <Badge className={`rounded-full text-xs ${isCompra ? 'bg-brand/10 text-brand' : 'bg-green-50 text-green-600'}`}>
                       {isCompra ? 'Compra' : 'Venda'}
                     </Badge>
                     <div className="flex items-center gap-2">
@@ -1027,7 +1027,7 @@ export default function LoteDetalhe() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleGerarPDFCompraVenda(cv)}
-                        className="h-7 px-2 text-[#556B2F] hover:text-[#3D4F22] hover:bg-[#556B2F]/10"
+                        className="h-7 px-2 text-brand hover:text-brand-700 hover:bg-brand/10"
                       >
                         <FileDown className="w-3 h-3 mr-1" />
                         <span className="text-[10px]">PDF</span>
@@ -1037,23 +1037,23 @@ export default function LoteDetalhe() {
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
                     <div>
                       <p className="text-gray-400">Cabeças</p>
-                      <p className="font-bold text-[#36454F]">{cv.qtd_cabecas}</p>
+                      <p className="font-bold text-ink-900">{cv.qtd_cabecas}</p>
                     </div>
                     <div>
                       <p className="text-gray-400">Peso Total</p>
-                      <p className="font-bold text-[#36454F]">
+                      <p className="font-bold text-ink-900">
                         {Number(cv.peso_total_kg).toFixed(0)} kg ({kgToArrobas(Number(cv.peso_total_kg)).toFixed(1)} @)
                       </p>
                     </div>
                     <div>
                       <p className="text-gray-400">Peso Médio/Cab</p>
-                      <p className="font-bold text-[#36454F]">
+                      <p className="font-bold text-ink-900">
                         {pesoMedio.toFixed(1)} kg ({kgToArrobas(pesoMedio).toFixed(2)} @)
                       </p>
                     </div>
                     <div>
                       <p className="text-gray-400">R$/Arroba</p>
-                      <p className="font-bold text-[#556B2F]">{formatBRL(Number(cv.valor_por_arroba))}</p>
+                      <p className="font-bold text-brand">{formatBRL(Number(cv.valor_por_arroba))}</p>
                     </div>
                   </div>
                 </div>
@@ -1066,7 +1066,7 @@ export default function LoteDetalhe() {
       {/* All Transactions */}
       <Card className="rounded-2xl shadow-sm border-0 bg-white">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base font-semibold text-[#36454F]">
+          <CardTitle className="text-base font-semibold text-ink-900">
             Todas as Transações do Lote
           </CardTitle>
         </CardHeader>
@@ -1093,7 +1093,7 @@ export default function LoteDetalhe() {
                       )}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-[#36454F]">
+                      <p className="text-sm font-medium text-ink-900">
                         {t.descricao || CATEGORIA_LABELS[t.categoria as CategoriaTransacao]}
                       </p>
                       <p className="text-xs text-gray-400">{formatDate(t.data)}</p>

@@ -22,7 +22,7 @@ import {
   Legend,
 } from 'recharts';
 
-const PIE_COLORS = ['#556B2F', '#36454F', '#D97706', '#2563EB', '#DC2626', '#7C3AED', '#059669'];
+const PIE_COLORS = ['hsl(152, 55%, 23%)', 'hsl(222, 47%, 11%)', '#D97706', '#2563EB', '#DC2626', '#7C3AED', '#059669'];
 
 const ALL_CATEGORIAS: CategoriaTransacao[] = [
   'VENDA_GADO', 'COMPRA_GADO', 'INSUMOS', 'INFRA', 'MAQUINARIO', 'PESSOAL', 'OUTROS',
@@ -115,7 +115,7 @@ export default function Relatorios() {
     const pct = totalDespesasPie > 0 ? ((item.value / totalDespesasPie) * 100).toFixed(1) : '0';
     return (
       <div className="bg-white rounded-xl shadow-lg border-0 px-4 py-3">
-        <p className="text-sm font-semibold text-[#36454F]">{item.name}</p>
+        <p className="text-sm font-semibold text-ink-900">{item.name}</p>
         <p className="text-sm text-gray-500">{formatBRL(item.value)} ({pct}%)</p>
       </div>
     );
@@ -140,11 +140,11 @@ export default function Relatorios() {
     <div className="max-w-7xl mx-auto px-4 py-6 pb-8 space-y-6">
       {/* Page Title */}
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-[#556B2F]/10 rounded-xl flex items-center justify-center">
-          <FileText className="w-5 h-5 text-[#556B2F]" />
+        <div className="w-10 h-10 bg-brand/10 rounded-xl flex items-center justify-center">
+          <FileText className="w-5 h-5 text-brand" />
         </div>
         <div>
-          <h2 className="text-xl font-bold text-[#36454F]">Relatórios Financeiros</h2>
+          <h2 className="text-xl font-bold text-ink-900">Relatórios Financeiros</h2>
           <p className="text-xs text-gray-400">Análise detalhada de receitas e despesas</p>
         </div>
       </div>
@@ -187,7 +187,7 @@ export default function Relatorios() {
                     onClick={() => toggleCategoria(cat)}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
                       isSelected
-                        ? 'bg-[#556B2F] text-white border-[#556B2F]'
+                        ? 'bg-brand text-white border-brand'
                         : 'bg-white text-gray-400 border-gray-200 hover:border-gray-300'
                     }`}
                   >
@@ -249,8 +249,8 @@ export default function Relatorios() {
       {pieData.length > 0 && (
         <Card className="rounded-2xl shadow-sm border-0 bg-white">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold text-[#36454F] flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-[#556B2F]" />
+            <CardTitle className="text-base font-semibold text-ink-900 flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-brand" />
               Despesas por Categoria
             </CardTitle>
           </CardHeader>
@@ -291,7 +291,7 @@ export default function Relatorios() {
                       <span className="text-gray-600">{item.name}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="font-medium text-[#36454F]">{formatBRL(item.value)}</span>
+                      <span className="font-medium text-ink-900">{formatBRL(item.value)}</span>
                       <Badge className="rounded-full bg-gray-100 text-gray-600 border-0 text-[10px] px-2">
                         {pct}%
                       </Badge>
@@ -307,7 +307,7 @@ export default function Relatorios() {
       {/* Transactions Table */}
       <Card className="rounded-2xl shadow-sm border-0 bg-white">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base font-semibold text-[#36454F]">
+          <CardTitle className="text-base font-semibold text-ink-900">
             Tabela de Transações ({filtered.length})
           </CardTitle>
         </CardHeader>
@@ -331,7 +331,7 @@ export default function Relatorios() {
                 <tbody>
                   {filtered.map((t) => (
                     <tr key={t.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                      <td className="py-3 px-2 text-xs text-[#36454F]">{formatDate(t.data)}</td>
+                      <td className="py-3 px-2 text-xs text-ink-900">{formatDate(t.data)}</td>
                       <td className="py-3 px-2">
                         <Badge
                           className={`rounded-full text-[10px] px-2 py-0.5 font-semibold ${

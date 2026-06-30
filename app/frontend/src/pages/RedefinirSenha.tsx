@@ -68,15 +68,15 @@ export default function RedefinirSenha() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-[#36454F]">
-      <div className="absolute inset-0 bg-gradient-to-br from-[#36454F] via-[#36454F] to-[#556B2F]/80" />
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-ink-900">
+      <div className="absolute inset-0 bg-gradient-to-br from-ink-900 via-ink-900 to-brand/80" />
 
       <Card className="relative z-10 w-full max-w-md mx-4 bg-white/95 backdrop-blur-sm shadow-2xl border-0 rounded-2xl">
         <CardHeader className="text-center pb-2 pt-8">
-          <div className="mx-auto mb-4 w-16 h-16 bg-[#556B2F] rounded-2xl flex items-center justify-center shadow-lg">
+          <div className="mx-auto mb-4 w-16 h-16 bg-brand rounded-2xl flex items-center justify-center shadow-lg">
             <Beef className="w-9 h-9 text-white" />
           </div>
-          <CardTitle className="text-2xl font-bold text-[#36454F]">Redefinir Senha</CardTitle>
+          <CardTitle className="text-2xl font-bold text-ink-900">Redefinir Senha</CardTitle>
           <CardDescription className="text-gray-500 text-sm">
             Escolha uma nova senha para sua conta
           </CardDescription>
@@ -97,7 +97,7 @@ export default function RedefinirSenha() {
               </p>
               <Button
                 onClick={() => navigate('/login')}
-                className="w-full h-14 rounded-xl text-base font-semibold bg-[#556B2F] hover:bg-[#3D4F22] text-white"
+                className="w-full h-14 rounded-xl text-base font-semibold bg-brand hover:bg-brand-700 text-white"
               >
                 Voltar ao Login
               </Button>
@@ -105,7 +105,7 @@ export default function RedefinirSenha() {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-[#36454F] font-medium">
+                <Label htmlFor="password" className="text-ink-900 font-medium">
                   Nova senha
                 </Label>
                 <div className="relative">
@@ -116,7 +116,7 @@ export default function RedefinirSenha() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="h-12 rounded-xl border-gray-200 focus:border-[#556B2F] focus:ring-[#556B2F] pr-12"
+                    className="h-12 rounded-xl border-gray-200 focus:border-brand focus:ring-brand pr-12"
                   />
                   <button
                     type="button"
@@ -129,7 +129,7 @@ export default function RedefinirSenha() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirm" className="text-[#36454F] font-medium">
+                <Label htmlFor="confirm" className="text-ink-900 font-medium">
                   Confirmar nova senha
                 </Label>
                 <Input
@@ -139,14 +139,14 @@ export default function RedefinirSenha() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
-                  className="h-12 rounded-xl border-gray-200 focus:border-[#556B2F] focus:ring-[#556B2F]"
+                  className="h-12 rounded-xl border-gray-200 focus:border-brand focus:ring-brand"
                 />
               </div>
 
               <Button
                 type="submit"
                 disabled={loading || authLoading}
-                className="w-full h-14 rounded-xl text-base font-semibold bg-[#556B2F] hover:bg-[#3D4F22] text-white shadow-lg"
+                className="w-full h-14 rounded-xl text-base font-semibold bg-brand hover:bg-brand-700 text-white shadow-lg"
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
                 Salvar nova senha

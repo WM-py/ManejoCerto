@@ -108,7 +108,7 @@ export default function NovoLancamento() {
         {/* Form Fields */}
         <Card className="rounded-2xl shadow-sm border-0">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base text-[#36454F]">Detalhes</CardTitle>
+            <CardTitle className="text-base text-ink-900">Detalhes</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -121,7 +121,7 @@ export default function NovoLancamento() {
                 value={valor}
                 onChange={(e) => setValor(e.target.value)}
                 required
-                className="h-14 rounded-xl text-2xl font-bold text-center border-gray-200 focus:border-[#556B2F] focus:ring-[#556B2F]"
+                className="h-14 rounded-xl text-2xl font-bold text-center border-gray-200 focus:border-brand focus:ring-brand"
               />
             </div>
 
@@ -166,7 +166,7 @@ export default function NovoLancamento() {
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-semibold text-[#36454F] text-sm">Vincular a um Lote</p>
+                <p className="font-semibold text-ink-900 text-sm">Vincular a um Lote</p>
                 <p className="text-xs text-gray-400 mt-0.5">
                   {vincularLote ? 'Custo direto do lote' : 'Custo fixo da fazenda'}
                 </p>
@@ -174,7 +174,7 @@ export default function NovoLancamento() {
               <Switch
                 checked={vincularLote}
                 onCheckedChange={setVincularLote}
-                className="data-[state=checked]:bg-[#556B2F]"
+                className="data-[state=checked]:bg-brand"
               />
             </div>
 
@@ -201,7 +201,7 @@ export default function NovoLancamento() {
         <Button
           type="submit"
           disabled={loading}
-          className="w-full h-16 rounded-2xl text-lg font-bold bg-[#556B2F] hover:bg-[#3D4F22] text-white shadow-xl"
+          className="w-full h-16 rounded-2xl text-lg font-bold bg-brand hover:bg-brand-700 text-white shadow-xl"
         >
           {loading ? <Loader2 className="w-6 h-6 animate-spin mr-2" /> : <Save className="w-6 h-6 mr-2" />}
           Salvar Lançamento

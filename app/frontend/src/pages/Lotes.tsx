@@ -244,19 +244,19 @@ export default function Lotes() {
   };
 
   const LoteCard = ({ lote }: { lote: Lote }) => (
-    <div className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-[#556B2F]/5 rounded-xl transition-colors">
+    <div className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-brand/5 rounded-xl transition-colors">
       <button
         onClick={() => navigate(`/lote/${lote.id}`)}
         className="flex-1 text-left flex items-center gap-3"
       >
         <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-          lote.status === 'ativo' ? 'bg-[#556B2F]/10' : 'bg-gray-200'
+          lote.status === 'ativo' ? 'bg-brand/10' : 'bg-gray-200'
         }`}>
-          <Beef className={`w-6 h-6 ${lote.status === 'ativo' ? 'text-[#556B2F]' : 'text-gray-400'}`} />
+          <Beef className={`w-6 h-6 ${lote.status === 'ativo' ? 'text-brand' : 'text-gray-400'}`} />
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <p className="font-semibold text-[#36454F]">{lote.nome_lote}</p>
+            <p className="font-semibold text-ink-900">{lote.nome_lote}</p>
             <Badge
               className={`rounded-full text-[10px] px-2 py-0 ${
                 lote.status === 'ativo'
@@ -295,7 +295,7 @@ export default function Lotes() {
     <div className="max-w-7xl mx-auto px-4 py-6 pb-8">
       <Button
         onClick={() => navigate('/compra-venda')}
-        className="w-full h-14 rounded-2xl bg-[#556B2F] hover:bg-[#3D4F22] text-white font-semibold mb-6 shadow-lg"
+        className="w-full h-14 rounded-2xl bg-brand hover:bg-brand-700 text-white font-semibold mb-6 shadow-lg"
       >
         <Scale className="w-5 h-5 mr-2" />
         Nova Compra de Gado
@@ -305,14 +305,14 @@ export default function Lotes() {
         <TabsList className="w-full bg-white rounded-xl shadow-sm border-0 h-12 p-1">
           <TabsTrigger
             value="ativos"
-            className="flex-1 rounded-lg data-[state=active]:bg-[#556B2F] data-[state=active]:text-white h-10 font-semibold"
+            className="flex-1 rounded-lg data-[state=active]:bg-brand data-[state=active]:text-white h-10 font-semibold"
           >
             <Beef className="w-4 h-4 mr-2" />
             Ativos ({lotesAtivos.length})
           </TabsTrigger>
           <TabsTrigger
             value="historico"
-            className="flex-1 rounded-lg data-[state=active]:bg-[#36454F] data-[state=active]:text-white h-10 font-semibold"
+            className="flex-1 rounded-lg data-[state=active]:bg-ink-900 data-[state=active]:text-white h-10 font-semibold"
           >
             <History className="w-4 h-4 mr-2" />
             Histórico ({lotesEncerrados.length})
@@ -322,15 +322,15 @@ export default function Lotes() {
         <TabsContent value="ativos" className="mt-4">
           <Card className="rounded-2xl shadow-sm border-0 bg-white">
             <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold text-[#36454F]">Lotes Ativos</CardTitle>
+              <CardTitle className="text-base font-semibold text-ink-900">Lotes Ativos</CardTitle>
             </CardHeader>
             <CardContent>
               {loading ? (
                 <p className="text-center py-8 text-gray-400">Carregando...</p>
               ) : lotesAtivos.length === 0 ? (
                 <div className="text-center py-8">
-                  <div className="w-20 h-20 mx-auto mb-3 bg-[#556B2F]/10 rounded-2xl flex items-center justify-center">
-                    <Beef className="w-10 h-10 text-[#556B2F]/30" />
+                  <div className="w-20 h-20 mx-auto mb-3 bg-brand/10 rounded-2xl flex items-center justify-center">
+                    <Beef className="w-10 h-10 text-brand/30" />
                   </div>
                   <p className="text-gray-400 text-sm">Nenhum lote ativo</p>
                 </div>
@@ -348,7 +348,7 @@ export default function Lotes() {
         <TabsContent value="historico" className="mt-4">
           <Card className="rounded-2xl shadow-sm border-0 bg-white">
             <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold text-[#36454F]">Lotes Encerrados</CardTitle>
+              <CardTitle className="text-base font-semibold text-ink-900">Lotes Encerrados</CardTitle>
             </CardHeader>
             <CardContent>
               {loading ? (

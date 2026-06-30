@@ -37,7 +37,7 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode }
           <div className="mx-auto mb-4 w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center">
             <AlertTriangle className="w-9 h-9 text-red-500" />
           </div>
-          <h1 className="text-xl font-bold text-[#36454F] mb-2">
+          <h1 className="text-xl font-bold text-ink-900 mb-2">
             Ops, algo deu errado
           </h1>
           <p className="text-sm text-gray-500 mb-6">
@@ -46,7 +46,7 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode }
           <div className="flex flex-col sm:flex-row gap-3">
             <Button
               onClick={this.handleReload}
-              className="flex-1 h-12 rounded-xl bg-[#556B2F] hover:bg-[#3D4F22] text-white"
+              className="flex-1 h-12 rounded-xl bg-brand hover:bg-brand-700 text-white"
             >
               <RefreshCw className="w-4 h-4 mr-2" />
               Recarregar

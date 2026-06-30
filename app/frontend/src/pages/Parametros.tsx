@@ -118,7 +118,7 @@ export default function Parametros() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-[#556B2F]" />
+        <Loader2 className="w-8 h-8 animate-spin text-brand" />
       </div>
     );
   }
@@ -128,11 +128,11 @@ export default function Parametros() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-[#556B2F] rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-brand rounded-xl flex items-center justify-center">
             <Settings2 className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-[#36454F]">Parâmetros da Fazenda</h2>
+            <h2 className="text-lg font-bold text-ink-900">Parâmetros da Fazenda</h2>
             <p className="text-xs text-gray-500">Métricas zootécnicas por fase de manejo</p>
           </div>
         </div>
@@ -142,7 +142,7 @@ export default function Parametros() {
               setNewFase(availableFases[0]);
               setShowNew(true);
             }}
-            className="bg-[#556B2F] hover:bg-[#3D4F22] text-white rounded-xl"
+            className="bg-brand hover:bg-brand-700 text-white rounded-xl"
             size="sm"
           >
             <Plus className="w-4 h-4 mr-1" />
@@ -153,9 +153,9 @@ export default function Parametros() {
 
       {/* Add New Form */}
       {showNew && (
-        <Card className="rounded-2xl shadow-sm border-2 border-[#556B2F]/30">
+        <Card className="rounded-2xl shadow-sm border-2 border-brand/30">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base text-[#556B2F]">Nova Fase de Manejo</CardTitle>
+            <CardTitle className="text-base text-brand">Nova Fase de Manejo</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -230,7 +230,7 @@ export default function Parametros() {
               <Button
                 onClick={handleAdd}
                 disabled={addingNew}
-                className="flex-1 h-12 rounded-xl bg-[#556B2F] hover:bg-[#3D4F22] text-white font-semibold"
+                className="flex-1 h-12 rounded-xl bg-brand hover:bg-brand-700 text-white font-semibold"
               >
                 {addingNew ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-5 h-5 mr-2" />}
                 Salvar
@@ -264,8 +264,8 @@ export default function Parametros() {
           <Card key={param.id} className="rounded-2xl shadow-sm border-0">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-base text-[#36454F] flex items-center gap-2">
-                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[#556B2F]/10 text-[#556B2F] text-xs font-bold">
+                <CardTitle className="text-base text-ink-900 flex items-center gap-2">
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-brand/10 text-brand text-xs font-bold">
                     {param.fase_manejo.charAt(0)}
                   </span>
                   {param.fase_manejo}
@@ -332,7 +332,7 @@ export default function Parametros() {
                 </div>
               </div>
               {saving === param.id && (
-                <p className="text-xs text-[#556B2F] flex items-center gap-1">
+                <p className="text-xs text-brand flex items-center gap-1">
                   <Loader2 className="w-3 h-3 animate-spin" /> Salvando...
                 </p>
               )}

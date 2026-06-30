@@ -244,7 +244,7 @@ export default function CompraVenda() {
             <div className="flex gap-3">
               <Button
                 onClick={handleGerarPDF}
-                className="flex-1 h-12 rounded-xl bg-[#556B2F] hover:bg-[#3D4F22] text-white font-semibold"
+                className="flex-1 h-12 rounded-xl bg-brand hover:bg-brand-700 text-white font-semibold"
               >
                 <FileDown className="w-5 h-5 mr-2" />
                 Gerar Recibo (PDF)
@@ -269,7 +269,7 @@ export default function CompraVenda() {
             onClick={() => setOperacao('COMPRA')}
             className={`h-14 rounded-2xl font-semibold text-base flex items-center justify-center gap-2 transition-all ${
               operacao === 'COMPRA'
-                ? 'bg-[#556B2F] text-white shadow-lg'
+                ? 'bg-brand text-white shadow-lg'
                 : 'bg-white text-gray-400 border border-gray-200'
             }`}
           >
@@ -293,7 +293,7 @@ export default function CompraVenda() {
         {/* Lote Info */}
         <Card className="rounded-2xl shadow-sm border-0">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base text-[#36454F]">
+            <CardTitle className="text-base text-ink-900">
               {operacao === 'COMPRA' ? 'Novo Lote' : 'Selecionar Lote'}
             </CardTitle>
           </CardHeader>
@@ -391,8 +391,8 @@ export default function CompraVenda() {
         {/* Pesagem e Valor */}
         <Card className="rounded-2xl shadow-sm border-0">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base text-[#36454F] flex items-center gap-2">
-              <Scale className="w-5 h-5 text-[#556B2F]" />
+            <CardTitle className="text-base text-ink-900 flex items-center gap-2">
+              <Scale className="w-5 h-5 text-brand" />
               Pesagem e Valor
             </CardTitle>
           </CardHeader>
@@ -412,17 +412,17 @@ export default function CompraVenda() {
             </div>
 
             {Number(pesoTotalKg) > 0 && (
-              <div className="bg-[#556B2F]/5 rounded-xl p-4 border border-[#556B2F]/10 space-y-2">
+              <div className="bg-brand/5 rounded-xl p-4 border border-brand/10 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Total em Arrobas (@)</span>
-                  <span className="text-lg font-bold text-[#556B2F]">
+                  <span className="text-lg font-bold text-brand">
                     {arrobas.toFixed(2)} @
                   </span>
                 </div>
                 {pesoMedioPorCabeca > 0 && (
-                  <div className="flex items-center justify-between border-t border-[#556B2F]/10 pt-2">
+                  <div className="flex items-center justify-between border-t border-brand/10 pt-2">
                     <span className="text-xs text-gray-500">Peso médio/cabeça</span>
-                    <span className="text-sm font-semibold text-[#36454F]">
+                    <span className="text-sm font-semibold text-ink-900">
                       {pesoMedioPorCabeca.toFixed(1)} kg ({arrobasPorCabeca.toFixed(2)} @)
                     </span>
                   </div>
@@ -440,15 +440,15 @@ export default function CompraVenda() {
                 value={valorTotal}
                 onChange={(e) => setValorTotal(e.target.value)}
                 required
-                className="h-14 rounded-xl text-2xl font-bold text-center border-gray-200 focus:border-[#556B2F] focus:ring-[#556B2F]"
+                className="h-14 rounded-xl text-2xl font-bold text-center border-gray-200 focus:border-brand focus:ring-brand"
               />
             </div>
 
             {valorPorArroba > 0 && (
-              <div className="bg-[#556B2F]/5 rounded-xl p-4 border border-[#556B2F]/10">
+              <div className="bg-brand/5 rounded-xl p-4 border border-brand/10">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Valor por Arroba (@)</span>
-                  <span className="text-lg font-bold text-[#556B2F]">
+                  <span className="text-lg font-bold text-brand">
                     {formatBRL(valorPorArroba)}
                   </span>
                 </div>
@@ -473,7 +473,7 @@ export default function CompraVenda() {
           disabled={loading}
           className={`w-full h-16 rounded-2xl text-lg font-bold shadow-xl text-white ${
             operacao === 'COMPRA'
-              ? 'bg-[#556B2F] hover:bg-[#3D4F22]'
+              ? 'bg-brand hover:bg-brand-700'
               : 'bg-green-500 hover:bg-green-600'
           }`}
         >

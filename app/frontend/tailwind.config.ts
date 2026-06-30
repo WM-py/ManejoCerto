@@ -20,7 +20,44 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+      },
       colors: {
+        brand: {
+          DEFAULT: 'hsl(var(--brand))',
+          foreground: 'hsl(var(--brand-foreground))',
+          50: 'hsl(var(--brand-50))',
+          100: 'hsl(var(--brand-100))',
+          200: 'hsl(var(--brand-200))',
+          600: 'hsl(var(--brand-600))',
+          700: 'hsl(var(--brand-700))',
+        },
+        ink: {
+          900: 'hsl(var(--ink-900))',
+          700: 'hsl(var(--ink-700))',
+          500: 'hsl(var(--ink-500))',
+          400: 'hsl(var(--ink-400))',
+          200: 'hsl(var(--ink-200))',
+          100: 'hsl(var(--ink-100))',
+          50: 'hsl(var(--ink-50))',
+        },
+        success: {
+          DEFAULT: 'hsl(var(--success))',
+          soft: 'hsl(var(--success-soft))',
+        },
+        danger: {
+          DEFAULT: 'hsl(var(--danger))',
+          soft: 'hsl(var(--danger-soft))',
+        },
+        warning: {
+          DEFAULT: 'hsl(var(--warning))',
+          soft: 'hsl(var(--warning-soft))',
+        },
+        info: {
+          DEFAULT: 'hsl(var(--info))',
+          soft: 'hsl(var(--info-soft))',
+        },
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',

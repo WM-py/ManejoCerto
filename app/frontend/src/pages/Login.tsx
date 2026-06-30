@@ -94,7 +94,7 @@ export default function Login() {
           backgroundImage: `url(/login-bg.png)`,
         }}
       />
-      <div className="absolute inset-0 bg-gradient-to-br from-[#36454F]/90 via-[#36454F]/70 to-[#556B2F]/80" />
+      <div className="absolute inset-0 bg-gradient-to-br from-ink-900/90 via-ink-900/70 to-brand/80" />
       {children}
     </div>
   );
@@ -107,13 +107,13 @@ export default function Login() {
             <div className="mx-auto mb-4 w-16 h-16 bg-green-500 rounded-full flex items-center justify-center">
               <CheckCircle2 className="w-9 h-9 text-white" />
             </div>
-            <h2 className="text-xl font-bold text-[#36454F] mb-2">Conta Criada!</h2>
+            <h2 className="text-xl font-bold text-ink-900 mb-2">Conta Criada!</h2>
             <p className="text-gray-500 text-sm mb-6">
               Verifique seu email para confirmar a conta. Após confirmar, faça login para acessar o sistema.
             </p>
             <Button
               onClick={() => { setSignUpSuccess(false); setMode('login'); }}
-              className="w-full h-14 rounded-xl text-base font-semibold bg-[#556B2F] hover:bg-[#3D4F22] text-white"
+              className="w-full h-14 rounded-xl text-base font-semibold bg-brand hover:bg-brand-700 text-white"
             >
               Ir para Login
             </Button>
@@ -128,17 +128,17 @@ export default function Login() {
       <BackgroundWrapper>
         <Card className="relative z-10 w-full max-w-md mx-4 bg-white/95 backdrop-blur-sm shadow-2xl border-0 rounded-2xl">
           <CardContent className="p-8 text-center">
-            <div className="mx-auto mb-4 w-16 h-16 bg-[#556B2F] rounded-full flex items-center justify-center">
+            <div className="mx-auto mb-4 w-16 h-16 bg-brand rounded-full flex items-center justify-center">
               <MailCheck className="w-9 h-9 text-white" />
             </div>
-            <h2 className="text-xl font-bold text-[#36454F] mb-2">E-mail enviado!</h2>
+            <h2 className="text-xl font-bold text-ink-900 mb-2">E-mail enviado!</h2>
             <p className="text-gray-500 text-sm mb-6">
               Se houver uma conta com <strong>{email}</strong>, você receberá um link para redefinir a senha.
               Verifique também a caixa de spam.
             </p>
             <Button
               onClick={() => { setResetSent(false); setMode('login'); }}
-              className="w-full h-14 rounded-xl text-base font-semibold bg-[#556B2F] hover:bg-[#3D4F22] text-white"
+              className="w-full h-14 rounded-xl text-base font-semibold bg-brand hover:bg-brand-700 text-white"
             >
               Voltar ao Login
             </Button>
@@ -152,10 +152,10 @@ export default function Login() {
     <BackgroundWrapper>
       <Card className="relative z-10 w-full max-w-md mx-4 bg-white/95 backdrop-blur-sm shadow-2xl border-0 rounded-2xl">
         <CardHeader className="text-center pb-2 pt-8">
-          <div className="mx-auto mb-4 w-16 h-16 bg-[#556B2F] rounded-2xl flex items-center justify-center shadow-lg">
+          <div className="mx-auto mb-4 w-16 h-16 bg-brand rounded-2xl flex items-center justify-center shadow-lg">
             <Beef className="w-9 h-9 text-white" />
           </div>
-          <CardTitle className="text-2xl font-bold text-[#36454F]">Manejo Certo</CardTitle>
+          <CardTitle className="text-2xl font-bold text-ink-900">Manejo Certo</CardTitle>
           <CardDescription className="text-gray-500 text-sm">
             {mode === 'forgot'
               ? 'Informe seu e-mail para recuperar o acesso'
@@ -167,7 +167,7 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {mode === 'signup' && (
               <div className="space-y-2">
-                <Label htmlFor="nomeFazenda" className="text-[#36454F] font-medium">
+                <Label htmlFor="nomeFazenda" className="text-ink-900 font-medium">
                   Nome da fazenda
                 </Label>
                 <Input
@@ -177,13 +177,13 @@ export default function Login() {
                   value={nomeFazenda}
                   onChange={(e) => setNomeFazenda(e.target.value)}
                   required
-                  className="h-12 rounded-xl border-gray-200 focus:border-[#556B2F] focus:ring-[#556B2F]"
+                  className="h-12 rounded-xl border-gray-200 focus:border-brand focus:ring-brand"
                 />
               </div>
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-[#36454F] font-medium">
+              <Label htmlFor="email" className="text-ink-900 font-medium">
                 Email
               </Label>
               <Input
@@ -193,21 +193,21 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="h-12 rounded-xl border-gray-200 focus:border-[#556B2F] focus:ring-[#556B2F]"
+                className="h-12 rounded-xl border-gray-200 focus:border-brand focus:ring-brand"
               />
             </div>
 
             {mode !== 'forgot' && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-[#36454F] font-medium">
+                  <Label htmlFor="password" className="text-ink-900 font-medium">
                     Senha
                   </Label>
                   {mode === 'login' && (
                     <button
                       type="button"
                       onClick={() => setMode('forgot')}
-                      className="text-xs text-[#556B2F] hover:text-[#3D4F22] font-medium hover:underline"
+                      className="text-xs text-brand hover:text-brand-700 font-medium hover:underline"
                     >
                       Esqueci minha senha
                     </button>
@@ -221,7 +221,7 @@ export default function Login() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="h-12 rounded-xl border-gray-200 focus:border-[#556B2F] focus:ring-[#556B2F] pr-12"
+                    className="h-12 rounded-xl border-gray-200 focus:border-brand focus:ring-brand pr-12"
                   />
                   <button
                     type="button"
@@ -237,7 +237,7 @@ export default function Login() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-14 rounded-xl text-base font-semibold bg-[#556B2F] hover:bg-[#3D4F22] text-white shadow-lg"
+              className="w-full h-14 rounded-xl text-base font-semibold bg-brand hover:bg-brand-700 text-white shadow-lg"
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
               {mode === 'login' ? 'Entrar' : mode === 'signup' ? 'Criar Conta' : 'Enviar link de recuperação'}
@@ -248,14 +248,14 @@ export default function Login() {
             {mode === 'forgot' ? (
               <button
                 onClick={() => setMode('login')}
-                className="text-sm text-[#556B2F] hover:text-[#3D4F22] font-medium hover:underline"
+                className="text-sm text-brand hover:text-brand-700 font-medium hover:underline"
               >
                 Voltar ao login
               </button>
             ) : (
               <button
                 onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
-                className="text-sm text-[#556B2F] hover:text-[#3D4F22] font-medium hover:underline"
+                className="text-sm text-brand hover:text-brand-700 font-medium hover:underline"
               >
                 {mode === 'login' ? 'Não tem conta? Cadastre-se' : 'Já tem conta? Faça login'}
               </button>

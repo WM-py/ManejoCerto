@@ -82,7 +82,7 @@ export default function Pastos() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-[#556B2F]" />
+        <Loader2 className="w-8 h-8 animate-spin text-brand" />
       </div>
     );
   }
@@ -91,17 +91,17 @@ export default function Pastos() {
     <div className="max-w-5xl mx-auto px-4 py-6 pb-8 space-y-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-[#556B2F] rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-brand rounded-xl flex items-center justify-center">
             <MapPin className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-[#36454F]">Gestão de Pastos</h2>
+            <h2 className="text-lg font-bold text-ink-900">Gestão de Pastos</h2>
             <p className="text-xs text-gray-500">Cadastre e gerencie os pastos da fazenda</p>
           </div>
         </div>
         <Button
           onClick={() => setShowNew(true)}
-          className="bg-[#556B2F] hover:bg-[#3D4F22] text-white rounded-xl"
+          className="bg-brand hover:bg-brand-700 text-white rounded-xl"
           size="sm"
         >
           <Plus className="w-4 h-4 mr-1" />
@@ -110,9 +110,9 @@ export default function Pastos() {
       </div>
 
       {showNew && (
-        <Card className="rounded-2xl shadow-sm border-2 border-[#556B2F]/30">
+        <Card className="rounded-2xl shadow-sm border-2 border-brand/30">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base text-[#556B2F]">Novo Pasto</CardTitle>
+            <CardTitle className="text-base text-brand">Novo Pasto</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -139,7 +139,7 @@ export default function Pastos() {
               <Button
                 onClick={handleAdd}
                 disabled={addingNew}
-                className="flex-1 h-12 rounded-xl bg-[#556B2F] hover:bg-[#3D4F22] text-white font-semibold"
+                className="flex-1 h-12 rounded-xl bg-brand hover:bg-brand-700 text-white font-semibold"
               >
                 {addingNew ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-5 h-5 mr-2" />}
                 Salvar
@@ -170,11 +170,11 @@ export default function Pastos() {
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#556B2F]/10 rounded-xl flex items-center justify-center">
-                      <MapPin className="w-5 h-5 text-[#556B2F]" />
+                    <div className="w-10 h-10 bg-brand/10 rounded-xl flex items-center justify-center">
+                      <MapPin className="w-5 h-5 text-brand" />
                     </div>
                     <div>
-                      <p className="font-semibold text-[#36454F]">{pasto.nome_pasto}</p>
+                      <p className="font-semibold text-ink-900">{pasto.nome_pasto}</p>
                       <p className="text-xs text-gray-400">Capacidade: {pasto.capacidade_cabecas} cabeças</p>
                     </div>
                   </div>
@@ -198,7 +198,7 @@ export default function Pastos() {
                   </div>
                   <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full transition-all ${ocupacao > 90 ? 'bg-red-500' : ocupacao > 70 ? 'bg-amber-500' : 'bg-[#556B2F]'}`}
+                      className={`h-full rounded-full transition-all ${ocupacao > 90 ? 'bg-red-500' : ocupacao > 70 ? 'bg-amber-500' : 'bg-brand'}`}
                       style={{ width: `${Math.min(ocupacao, 100)}%` }}
                     />
                   </div>
@@ -208,8 +208,8 @@ export default function Pastos() {
                   <div className="space-y-1">
                     {lotesVinculados.map((l) => (
                       <div key={l.id} className="flex items-center gap-2 text-xs bg-gray-50 rounded-lg px-3 py-2">
-                        <Beef className="w-3 h-3 text-[#556B2F]" />
-                        <span className="text-[#36454F] font-medium">{l.nome_lote}</span>
+                        <Beef className="w-3 h-3 text-brand" />
+                        <span className="text-ink-900 font-medium">{l.nome_lote}</span>
                         <span className="text-gray-400">({l.qtd_cabecas - l.qtd_cabecas_vendidas} cab.)</span>
                       </div>
                     ))}

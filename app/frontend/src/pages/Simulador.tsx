@@ -136,7 +136,7 @@ export default function Simulador() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-[#556B2F]" />
+        <Loader2 className="w-8 h-8 animate-spin text-brand" />
       </div>
     );
   }
@@ -154,7 +154,7 @@ export default function Simulador() {
             </p>
             <Button
               onClick={() => navigate('/parametros')}
-              className="mt-6 bg-[#556B2F] hover:bg-[#3D4F22] text-white rounded-xl"
+              className="mt-6 bg-brand hover:bg-brand-700 text-white rounded-xl"
             >
               <Settings2 className="w-4 h-4 mr-2" />
               Ir para Parâmetros
@@ -169,11 +169,11 @@ export default function Simulador() {
     <div className="max-w-3xl mx-auto px-4 py-6 pb-8 space-y-5">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-[#556B2F] rounded-xl flex items-center justify-center">
+        <div className="w-10 h-10 bg-brand rounded-xl flex items-center justify-center">
           <Calculator className="w-5 h-5 text-white" />
         </div>
         <div>
-          <h2 className="text-lg font-bold text-[#36454F]">Simulador de Viabilidade</h2>
+          <h2 className="text-lg font-bold text-ink-900">Simulador de Viabilidade</h2>
           <p className="text-xs text-gray-500">Simule a compra de gado antes de efetivar</p>
         </div>
       </div>
@@ -181,13 +181,13 @@ export default function Simulador() {
       {/* Fase de Manejo Selector */}
       <Card className="rounded-2xl shadow-sm border-0">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base text-[#36454F]">Fase de Manejo</CardTitle>
+          <CardTitle className="text-base text-ink-900">Fase de Manejo</CardTitle>
         </CardHeader>
         <CardContent>
           <select
             value={faseManejo}
             onChange={(e) => setFaseManejo(e.target.value)}
-            className="w-full h-12 rounded-xl border border-gray-200 px-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#556B2F]/30"
+            className="w-full h-12 rounded-xl border border-gray-200 px-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand/30"
           >
             {parametros.map((p) => (
               <option key={p.id} value={p.fase_manejo}>
@@ -197,24 +197,24 @@ export default function Simulador() {
           </select>
 
           {selectedParam && (
-            <div className="mt-3 bg-[#556B2F]/5 rounded-xl p-4 border border-[#556B2F]/10">
-              <p className="text-xs font-semibold text-[#556B2F] mb-2">Parâmetros da fase "{selectedParam.fase_manejo}":</p>
+            <div className="mt-3 bg-brand/5 rounded-xl p-4 border border-brand/10">
+              <p className="text-xs font-semibold text-brand mb-2">Parâmetros da fase "{selectedParam.fase_manejo}":</p>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Custo/cab/dia:</span>
-                  <span className="font-semibold text-[#36454F]">{formatBRL(selectedParam.custo_diario_cabeca)}</span>
+                  <span className="font-semibold text-ink-900">{formatBRL(selectedParam.custo_diario_cabeca)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">GMD:</span>
-                  <span className="font-semibold text-[#36454F]">{selectedParam.gmd_esperado_kg} kg/dia</span>
+                  <span className="font-semibold text-ink-900">{selectedParam.gmd_esperado_kg} kg/dia</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Rend. Carcaça:</span>
-                  <span className="font-semibold text-[#36454F]">{selectedParam.rendimento_carcaca_perc}%</span>
+                  <span className="font-semibold text-ink-900">{selectedParam.rendimento_carcaca_perc}%</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Mortalidade:</span>
-                  <span className="font-semibold text-[#36454F]">{selectedParam.mortalidade_esperada_perc}%</span>
+                  <span className="font-semibold text-ink-900">{selectedParam.mortalidade_esperada_perc}%</span>
                 </div>
               </div>
             </div>
@@ -225,7 +225,7 @@ export default function Simulador() {
       {/* Input Form */}
       <Card className="rounded-2xl shadow-sm border-0">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base text-[#36454F]">Dados da Simulação</CardTitle>
+          <CardTitle className="text-base text-ink-900">Dados da Simulação</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
@@ -289,7 +289,7 @@ export default function Simulador() {
               placeholder="0,00"
               value={precoVendaArroba}
               onChange={(e) => setPrecoVendaArroba(e.target.value)}
-              className="h-14 rounded-xl text-xl font-bold text-center border-gray-200 focus:border-[#556B2F] focus:ring-[#556B2F]"
+              className="h-14 rounded-xl text-xl font-bold text-center border-gray-200 focus:border-brand focus:ring-brand"
             />
           </div>
         </CardContent>
@@ -354,7 +354,7 @@ export default function Simulador() {
               </div>
               <div className="border-t-2 border-gray-300 pt-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold text-[#36454F]">Lucro Líquido Projetado</span>
+                  <span className="text-sm font-bold text-ink-900">Lucro Líquido Projetado</span>
                   <span
                     className={`text-xl font-extrabold ${
                       calc.isLucro ? 'text-green-600' : 'text-red-600'
@@ -399,7 +399,7 @@ export default function Simulador() {
             {/* Efetivar Compra Button */}
             <Button
               onClick={handleEfetivarCompra}
-              className="w-full h-16 rounded-2xl text-lg font-bold shadow-xl bg-[#556B2F] hover:bg-[#3D4F22] text-white mt-4"
+              className="w-full h-16 rounded-2xl text-lg font-bold shadow-xl bg-brand hover:bg-brand-700 text-white mt-4"
             >
               <ArrowRight className="w-6 h-6 mr-2" />
               Efetivar Compra
@@ -424,10 +424,10 @@ function ResultRow({
 }) {
   return (
     <div className="flex items-center justify-between">
-      <span className={`text-sm ${muted ? 'text-gray-500' : 'text-[#36454F]'} ${bold ? 'font-semibold' : ''}`}>
+      <span className={`text-sm ${muted ? 'text-gray-500' : 'text-ink-900'} ${bold ? 'font-semibold' : ''}`}>
         {label}
       </span>
-      <span className={`text-sm ${bold ? 'font-bold text-[#36454F]' : 'text-gray-700'}`}>{value}</span>
+      <span className={`text-sm ${bold ? 'font-bold text-ink-900' : 'text-gray-700'}`}>{value}</span>
     </div>
   );
 }

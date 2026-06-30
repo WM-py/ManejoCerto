@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/sheet';
 import {
   Menu,
-  Wallet,
+  LayoutDashboard,
   Beef,
   LogOut,
   Plus,
@@ -27,16 +27,45 @@ interface AppLayoutProps {
   children: React.ReactNode;
 }
 
-const NAV_ITEMS = [
-  { path: '/', label: 'Dashboard', icon: Wallet },
-  { path: '/lotes', label: 'Gestão de Lotes', icon: Beef },
-  { path: '/novo-lancamento', label: 'Novo Lançamento', icon: Plus },
-  { path: '/compra-venda', label: 'Compra / Venda', icon: Scale },
-  { path: '/pastos', label: 'Gestão de Pastos', icon: MapPin },
-  { path: '/simulador', label: 'Simulador', icon: Calculator },
-  { path: '/parametros', label: 'Parâmetros', icon: Settings2 },
-  { path: '/relatorios', label: 'Relatórios Financeiros', icon: BarChart3 },
+const NAV_GROUPS = [
+  {
+    label: 'Geral',
+    items: [
+      { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+      { path: '/relatorios', label: 'Relatórios', icon: BarChart3 },
+    ],
+  },
+  {
+    label: 'Operação',
+    items: [
+      { path: '/novo-lancamento', label: 'Novo lançamento', icon: Plus },
+      { path: '/compra-venda', label: 'Compra / Venda', icon: Scale },
+      { path: '/lotes', label: 'Lotes', icon: Beef },
+      { path: '/pastos', label: 'Pastos', icon: MapPin },
+    ],
+  },
+  {
+    label: 'Ferramentas',
+    items: [
+      { path: '/simulador', label: 'Simulador', icon: Calculator },
+      { path: '/parametros', label: 'Parâmetros', icon: Settings2 },
+    ],
+  },
 ];
+
+function BrandMark() {
+  return (
+    <div className="flex items-center gap-2.5">
+      <div className="w-9 h-9 bg-brand rounded-lg flex items-center justify-center shadow-sm">
+        <Beef className="w-5 h-5 text-white" strokeWidth={2.4} />
+      </div>
+      <div className="leading-tight">
+        <p className="text-[15px] font-bold text-ink-900 tracking-tight">Manejo Certo</p>
+        <p className="text-[10.5px] uppercase tracking-widest text-ink-400 font-semibold">Gestão Pecuária</p>
+      </div>
+    </div>
+  );
+}
 
 export default function AppLayout({ children }: AppLayoutProps) {
   const [open, setOpen] = useState(false);
@@ -57,116 +86,108 @@ export default function AppLayout({ children }: AppLayoutProps) {
       });
   }, [user]);
 
-  const handleNavigate = (path: string) => {
-    navigate(path);
-    setOpen(false);
-  };
-
-  const handleSignOut = () => {
-    setOpen(false);
-    signOut();
-  };
-
   const NavList = ({ onNavigate }: { onNavigate: (path: string) => void }) => (
-    <nav className="flex flex-col flex-1 px-3 py-4">
-      <div className="space-y-1 flex-1">
-        {NAV_ITEMS.map((item) => {
-          const Icon = item.icon;
-          const isActive = location.pathname === item.path;
-          return (
-            <button
-              key={item.path}
-              onClick={() => onNavigate(item.path)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
-                isActive
-                  ? 'bg-[#556B2F]/10 text-[#556B2F]'
-                  : 'text-[#36454F] hover:bg-gray-100'
-              }`}
-            >
-              <Icon className={`w-5 h-5 ${isActive ? 'text-[#556B2F]' : 'text-gray-400'}`} />
-              {item.label}
-            </button>
-          );
-        })}
+    <nav className="flex flex-col flex-1 px-3 py-4 overflow-y-auto">
+      <div className="flex-1 space-y-5">
+        {NAV_GROUPS.map((group) => (
+          <div key={group.label}>
+            <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-ink-400">
+              {group.label}
+            </p>
+            <div className="space-y-0.5">
+              {group.items.map((item) => {
+                const Icon = item.icon;
+                const isActive = location.pathname === item.path;
+                return (
+                  <button
+                    key={item.path}
+                    onClick={() => onNavigate(item.path)}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      isActive
+                        ? 'bg-brand/8 text-brand'
+                        : 'text-ink-700 hover:bg-ink-100'
+                    }`}
+                  >
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-brand' : 'text-ink-400'}`} strokeWidth={2.2} />
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
 
-      <div className="border-t border-gray-200 my-4" />
-
-      <button
-        onClick={handleSignOut}
-        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
-      >
-        <LogOut className="w-5 h-5" />
-        Sair
-      </button>
+      <div className="pt-4 mt-4 border-t border-ink-200">
+        <button
+          onClick={() => { setOpen(false); signOut(); }}
+          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium text-ink-500 hover:bg-danger-soft hover:text-danger transition-colors"
+        >
+          <LogOut className="w-4 h-4" strokeWidth={2.2} />
+          Sair
+        </button>
+      </div>
     </nav>
   );
 
-  const BrandHeader = () => (
-    <div className="bg-[#36454F] px-6 py-6">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-[#556B2F] rounded-xl flex items-center justify-center">
-          <Beef className="w-6 h-6 text-white" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-white text-lg font-bold leading-tight">Manejo Certo</p>
-          <p className="text-xs text-gray-300 truncate">{nomeFazenda || 'Gestão Financeira'}</p>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Top Header */}
-      <header className="fixed top-0 left-0 right-0 bg-[#36454F] text-white px-4 py-3 shadow-lg z-50">
-        <div className="flex items-center justify-between lg:pl-64">
-          {/* Mobile hamburger */}
-          <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-white hover:bg-white/10 lg:hidden"
-              >
-                <Menu className="w-6 h-6" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-72 p-0 bg-white border-r-0">
-              <SheetHeader className="p-0">
-                <SheetTitle className="sr-only">Menu</SheetTitle>
-                <BrandHeader />
-              </SheetHeader>
-              <NavList onNavigate={handleNavigate} />
-            </SheetContent>
-          </Sheet>
+    <div className="min-h-screen bg-ink-50">
+      {/* Top bar */}
+      <header className="fixed top-0 left-0 right-0 h-14 bg-white border-b border-ink-200 z-50 lg:pl-64">
+        <div className="h-full px-4 lg:px-6 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <Sheet open={open} onOpenChange={setOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="lg:hidden -ml-2 text-ink-700">
+                  <Menu className="w-5 h-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-72 p-0 bg-white border-r-0 flex flex-col">
+                <SheetHeader className="p-4 border-b border-ink-200">
+                  <SheetTitle className="sr-only">Menu</SheetTitle>
+                  <BrandMark />
+                </SheetHeader>
+                <NavList
+                  onNavigate={(path) => {
+                    navigate(path);
+                    setOpen(false);
+                  }}
+                />
+              </SheetContent>
+            </Sheet>
 
-          <h1 className="text-lg font-bold lg:hidden absolute left-1/2 -translate-x-1/2">
-            Manejo Certo
-          </h1>
+            <div className="lg:hidden">
+              <BrandMark />
+            </div>
 
-          {/* Desktop: farm name */}
-          <span className="hidden lg:block text-sm font-semibold text-gray-200">
-            {nomeFazenda || 'Manejo Certo'}
-          </span>
-          <div className="hidden lg:flex items-center gap-2 text-xs text-gray-300">
-            <Beef className="w-4 h-4 text-[#9CAF6A]" />
-            <span>Gestão Financeira para Pecuária</span>
+            <div className="hidden lg:flex flex-col leading-tight min-w-0">
+              <span className="text-[11px] text-ink-400 font-medium uppercase tracking-wider">Fazenda</span>
+              <span className="text-sm font-semibold text-ink-900 truncate">
+                {nomeFazenda || 'Sua Fazenda'}
+              </span>
+            </div>
           </div>
 
-          <div className="w-10 lg:hidden" />
+          <div className="flex items-center gap-2">
+            <span className="hidden md:inline-flex items-center gap-1.5 rounded-full bg-success-soft text-success text-[11px] font-semibold px-2.5 py-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-success" />
+              Conectado
+            </span>
+          </div>
         </div>
       </header>
 
       {/* Desktop fixed sidebar */}
-      <aside className="hidden lg:flex flex-col fixed top-0 left-0 bottom-0 w-64 bg-white border-r border-gray-200 z-40">
-        <button onClick={() => navigate('/')} className="text-left">
-          <BrandHeader />
+      <aside className="hidden lg:flex flex-col fixed top-0 left-0 bottom-0 w-64 bg-white border-r border-ink-200 z-40">
+        <button
+          onClick={() => navigate('/')}
+          className="text-left p-4 border-b border-ink-200 hover:bg-ink-100/50 transition-colors"
+        >
+          <BrandMark />
         </button>
         <NavList onNavigate={(path) => navigate(path)} />
       </aside>
 
-      {/* Main Content */}
       <main className="pt-14 lg:pl-64">{children}</main>
     </div>
   );

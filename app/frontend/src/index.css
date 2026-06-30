@@ -1,92 +1,74 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Sistema de design Manejo Certo
+       - brand: verde-floresta sóbrio (substitui o olive antigo)
+       - ink:   neutros frios para textos/superfícies
+       - feedback: receita/despesa/atenção
+    */
 
+    /* Brand */
+    --brand: 152 55% 23%;          /* #1B5E3A — verde-floresta */
+    --brand-foreground: 0 0% 100%;
+    --brand-50: 152 40% 96%;
+    --brand-100: 152 35% 88%;
+    --brand-200: 152 30% 72%;
+    --brand-600: 152 55% 28%;
+    --brand-700: 152 60% 18%;
+
+    /* Ink (neutros) */
+    --ink-900: 222 47% 11%;         /* títulos */
+    --ink-700: 215 28% 27%;         /* texto principal */
+    --ink-500: 215 16% 47%;         /* texto secundário */
+    --ink-400: 215 20% 65%;         /* hint */
+    --ink-200: 214 32% 91%;         /* bordas */
+    --ink-100: 210 40% 96%;         /* fundo sutil */
+    --ink-50:  210 40% 98%;         /* fundo body */
+
+    /* Feedback */
+    --success: 152 70% 38%;         /* receitas / positivo */
+    --success-soft: 152 60% 95%;
+    --danger: 0 72% 51%;            /* despesas / destrutivo */
+    --danger-soft: 0 85% 97%;
+    --warning: 38 92% 50%;          /* atenção */
+    --warning-soft: 48 96% 94%;
+    --info: 217 91% 60%;
+    --info-soft: 214 100% 97%;
+
+    /* shadcn shims (mantém compatibilidade dos componentes ui/) */
+    --background: var(--ink-50);
+    --foreground: var(--ink-900);
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
+    --card-foreground: var(--ink-900);
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
+    --popover-foreground: var(--ink-900);
+    --primary: var(--brand);
+    --primary-foreground: var(--brand-foreground);
+    --secondary: var(--ink-100);
+    --secondary-foreground: var(--ink-900);
+    --muted: var(--ink-100);
+    --muted-foreground: var(--ink-500);
+    --accent: var(--ink-100);
+    --accent-foreground: var(--ink-900);
+    --destructive: var(--danger);
+    --destructive-foreground: 0 0% 100%;
+    --border: var(--ink-200);
+    --input: var(--ink-200);
+    --ring: var(--brand);
     --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: var(--ink-700);
+    --sidebar-primary: var(--brand);
+    --sidebar-primary-foreground: var(--brand-foreground);
+    --sidebar-accent: var(--brand-50);
+    --sidebar-accent-foreground: var(--brand);
+    --sidebar-border: var(--ink-200);
+    --sidebar-ring: var(--brand);
   }
 }
 
@@ -95,7 +77,21 @@
     @apply border-border;
   }
 
+  html {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+
+  /* Números financeiros com largura fixa (alinham coluna a coluna) */
+  .tabular-nums,
+  .money {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum';
   }
 }
