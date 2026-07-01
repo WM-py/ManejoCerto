@@ -71,68 +71,93 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(true);
 
+  // 1) Sessão inicial + inscrição em mudanças de auth.
+  //    IMPORTANTE: o callback do onAuthStateChange é SÍNCRONO (só atualiza estado).
+  //    Chamar queries do Supabase aqui dentro causa deadlock do lock de auth
+  //    (a query nunca resolve e o app trava no "Carregando..."). O carregamento
+  //    do perfil fica no effect 2, disparado por mudança de user.id.
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-        if (error) throw error;
+    let active = true;
 
+    supabase.auth
+      .getSession()
+      .then(({ data: { session: currentSession } }) => {
+        if (!active) return;
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
-        setProfileLoading(true);
-
-        if (currentSession?.user) {
-          await ensureProfile(currentSession.user);
-          const loadedProfile = await loadProfile(currentSession.user.id);
-          setProfile(loadedProfile);
-        } else {
+        setLoading(false);
+        if (!currentSession?.user) {
           setProfile(null);
+          setProfileLoading(false);
         }
-      } catch (error) {
-        console.error('Falha ao inicializar autenticação:', error);
+      })
+      .catch((error) => {
+        console.error('Falha ao obter sessão:', error);
+        if (!active) return;
+        setSession(null);
+        setUser(null);
         setProfile(null);
-      } finally {
         setLoading(false);
         setProfileLoading(false);
-      }
-    };
-
-    initAuth();
+      });
 
     let subscription: { unsubscribe: () => void } | null = null;
-
     if (supabaseReady) {
-      const { data } = supabase.auth.onAuthStateChange(
-        async (event, newSession) => {
-          try {
-            setSession(newSession);
-            setUser(newSession?.user ?? null);
-            setLoading(false);
-
-            if (event === 'SIGNED_IN' && newSession?.user) {
-              setProfileLoading(true);
-              await ensureProfile(newSession.user);
-              const loadedProfile = await loadProfile(newSession.user.id);
-              setProfile(loadedProfile);
-              setProfileLoading(false);
-            }
-
-            if (event === 'SIGNED_OUT') {
-              setProfile(null);
-              setProfileLoading(false);
-            }
-          } catch (error) {
-            console.error('Erro no callback de alteração de sessão:', error);
-            setProfileLoading(false);
-            setLoading(false);
-          }
+      const { data } = supabase.auth.onAuthStateChange((_event, newSession) => {
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
+        setLoading(false);
+        if (!newSession?.user) {
+          setProfile(null);
+          setProfileLoading(false);
         }
-      );
+      });
       subscription = data.subscription;
     }
 
-    return () => subscription?.unsubscribe();
+    return () => {
+      active = false;
+      subscription?.unsubscribe();
+    };
   }, []);
+
+  // 2) Carrega o perfil quando o usuário muda — FORA do callback de auth (sem deadlock).
+  //    Failsafe: nunca deixa profileLoading preso por mais de 8s.
+  useEffect(() => {
+    const uid = user?.id;
+    if (!uid) {
+      setProfile(null);
+      setProfileLoading(false);
+      return;
+    }
+
+    let active = true;
+    setProfileLoading(true);
+
+    const failsafe = setTimeout(() => {
+      if (active) setProfileLoading(false);
+    }, 8000);
+
+    (async () => {
+      try {
+        if (user) await ensureProfile(user);
+        const loadedProfile = await loadProfile(uid);
+        if (active) setProfile(loadedProfile);
+      } catch (error) {
+        console.error('Falha ao carregar perfil:', error);
+        if (active) setProfile(null);
+      } finally {
+        if (active) setProfileLoading(false);
+        clearTimeout(failsafe);
+      }
+    })();
+
+    return () => {
+      active = false;
+      clearTimeout(failsafe);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const signUp = async (email: string, password: string, nomeFazenda?: string, metadata?: Record<string, string>) => {
     const { error } = await supabase.auth.signUp({
