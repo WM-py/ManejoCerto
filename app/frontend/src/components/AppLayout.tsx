@@ -70,6 +70,7 @@ function BrandMark() {
 export default function AppLayout({ children }: AppLayoutProps) {
   const [open, setOpen] = useState(false);
   const [nomeFazenda, setNomeFazenda] = useState('');
+  const [profileStatus, setProfileStatus] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signOut } = useAuth();
@@ -78,11 +79,39 @@ export default function AppLayout({ children }: AppLayoutProps) {
     if (!user) return;
     supabase
       .from(TABLES.profiles)
-      .select('nome_fazenda')
+      .select('nome_fazenda, trial_end, plan, plan_status')
       .eq('id', user.id)
       .maybeSingle()
       .then(({ data }) => {
-        if (data?.nome_fazenda) setNomeFazenda(data.nome_fazenda);
+        if (!data) return;
+        if (data.nome_fazenda) setNomeFazenda(data.nome_fazenda);
+
+        const plan = data.plan;
+        const planStatus = data.plan_status;
+        const trialEnd = data.trial_end ? new Date(data.trial_end) : null;
+        if (trialEnd && planStatus === 'trialing') {
+          const diffMs = trialEnd.getTime() - Date.now();
+          const days = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+          setProfileStatus(`Teste grátis • ${days} dia${days === 1 ? '' : 's'} restantes`);
+          return;
+        }
+
+        if (plan === 'annual') {
+          setProfileStatus('Plano anual ativo');
+          return;
+        }
+
+        if (plan === 'lifetime') {
+          setProfileStatus('Plano vitalício ativo');
+          return;
+        }
+
+        if (planStatus === 'active') {
+          setProfileStatus('Plano ativo');
+          return;
+        }
+
+        setProfileStatus('Acesso liberado');
       });
   }, [user]);
 
@@ -169,10 +198,16 @@ export default function AppLayout({ children }: AppLayoutProps) {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="hidden md:inline-flex items-center gap-1.5 rounded-full bg-success-soft text-success text-[11px] font-semibold px-2.5 py-1">
+            <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-success-soft text-success text-[11px] font-semibold px-2.5 py-1">
               <span className="w-1.5 h-1.5 rounded-full bg-success" />
               Conectado
             </span>
+            {profileStatus && (
+              <span className="inline-flex items-center gap-1.5 max-w-[220px] truncate rounded-full bg-amber-100 text-amber-900 text-[11px] font-semibold px-2.5 py-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                <span className="truncate">{profileStatus}</span>
+              </span>
+            )}
           </div>
         </div>
       </header>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -20,8 +20,25 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [signUpSuccess, setSignUpSuccess] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
+  const nomeFazendaRef = useRef<HTMLInputElement>(null);
   const { signIn, signUp, resetPassword } = useAuth();
   const { toast } = useToast();
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (mode === 'signup') {
+        nomeFazendaRef.current?.focus();
+      } else if (mode === 'forgot') {
+        emailRef.current?.focus();
+      } else {
+        emailRef.current?.focus();
+      }
+    }, 50);
+
+    return () => window.clearTimeout(timer);
+  }, [mode, signUpSuccess, resetSent]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,11 +190,13 @@ export default function Login() {
                   Nome da fazenda
                 </Label>
                 <Input
+                  ref={nomeFazendaRef}
                   id="nomeFazenda"
                   type="text"
                   placeholder="Ex: Fazenda Boa Vista"
                   value={nomeFazenda}
                   onChange={(e) => setNomeFazenda(e.target.value)}
+                  autoComplete="organization"
                   required
                   className="h-12 rounded-xl border-gray-200 focus:border-brand focus:ring-brand"
                 />
@@ -189,11 +208,13 @@ export default function Login() {
                 Email
               </Label>
               <Input
+                ref={emailRef}
                 id="email"
                 type="email"
                 placeholder="seu@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
                 required
                 className="h-12 rounded-xl border-gray-200 focus:border-brand focus:ring-brand"
               />
@@ -217,17 +238,21 @@ export default function Login() {
                 </div>
                 <div className="relative">
                   <Input
+                    ref={passwordRef}
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                     required
                     className="h-12 rounded-xl border-gray-200 focus:border-brand focus:ring-brand pr-12"
                   />
                   <button
                     type="button"
+                    onMouseDown={(e) => e.preventDefault()}
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}

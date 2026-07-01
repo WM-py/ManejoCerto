@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase, TABLES } from '@/lib/supabase';
+import { Profile } from '@/lib/types';
 
 /**
  * Garante que o perfil do usuário exista com o nome da fazenda.
@@ -12,15 +13,21 @@ async function ensureProfile(user: User) {
 
   const { data: existing } = await supabase
     .from(TABLES.profiles)
-    .select('id, nome_fazenda')
+    .select('id, nome_fazenda, trial_start, trial_end, plan, plan_status')
     .eq('id', user.id)
     .maybeSingle();
 
-  // Perfil ausente: cria com o nome da fazenda (ou um padrão).
+  // Perfil ausente: cria com o nome da fazenda (ou um padrão) e inicia o trial.
   if (!existing) {
+    const trialStart = new Date().toISOString();
+    const trialEnd = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
     await supabase.from(TABLES.profiles).insert({
       id: user.id,
       nome_fazenda: nomeFazendaMeta || 'Minha Fazenda',
+      trial_start: trialStart,
+      trial_end: trialEnd,
+      plan: 'trial',
+      plan_status: 'trialing',
     });
     return;
   }
@@ -31,10 +38,23 @@ async function ensureProfile(user: User) {
   }
 }
 
+async function loadProfile(userId: string): Promise<Profile | null> {
+  const { data, error } = await supabase
+    .from(TABLES.profiles)
+    .select('id, nome_fazenda, created_at, trial_start, trial_end, plan, plan_status')
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (error) return null;
+  return data as Profile | null;
+}
+
 interface AuthContextType {
   session: Session | null;
   user: User | null;
+  profile: Profile | null;
   loading: boolean;
+  profileLoading: boolean;
   signUp: (email: string, password: string, nomeFazenda?: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -47,26 +67,48 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(true);
 
   useEffect(() => {
     const initAuth = async () => {
       const { data: { session: currentSession } } = await supabase.auth.getSession();
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
+      setProfileLoading(true);
+
+      if (currentSession?.user) {
+        await ensureProfile(currentSession.user);
+        const loadedProfile = await loadProfile(currentSession.user.id);
+        setProfile(loadedProfile);
+      } else {
+        setProfile(null);
+      }
+
       setLoading(false);
+      setProfileLoading(false);
     };
 
     initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, newSession) => {
+      async (event, newSession) => {
         setSession(newSession);
         setUser(newSession?.user ?? null);
         setLoading(false);
-        // Ao confirmar o cadastro / primeiro login, garante o perfil.
+
         if (event === 'SIGNED_IN' && newSession?.user) {
-          ensureProfile(newSession.user).catch(() => {/* silencioso */});
+          setProfileLoading(true);
+          await ensureProfile(newSession.user);
+          const loadedProfile = await loadProfile(newSession.user.id);
+          setProfile(loadedProfile);
+          setProfileLoading(false);
+        }
+
+        if (event === 'SIGNED_OUT') {
+          setProfile(null);
+          setProfileLoading(false);
         }
       }
     );
@@ -109,7 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ session, user, loading, signUp, signIn, signOut, resetPassword, updatePassword }}
+      value={{ session, user, profile, loading, profileLoading, signUp, signIn, signOut, resetPassword, updatePassword }}
     >
       {children}
     </AuthContext.Provider>

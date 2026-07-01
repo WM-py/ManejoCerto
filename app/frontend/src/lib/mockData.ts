@@ -44,7 +44,15 @@ const U = MOCK_USER.id;
 export function buildMockDB(): Record<string, Record<string, unknown>[]> {
   return {
     [T.profiles]: [
-      { id: U, nome_fazenda: 'Fazenda Boa Vista', created_at: daysAgo(400) },
+      {
+        id: U,
+        nome_fazenda: 'Fazenda Boa Vista',
+        created_at: daysAgo(400),
+        trial_start: daysAgo(2),
+        trial_end: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000).toISOString(),
+        plan: 'trial',
+        plan_status: 'trialing',
+      },
     ],
 
     [T.pastos]: [

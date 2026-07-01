@@ -2,6 +2,10 @@ export interface Profile {
   id: string;
   nome_fazenda: string;
   created_at: string;
+  trial_start?: string | null;
+  trial_end?: string | null;
+  plan?: 'trial' | 'annual' | 'lifetime' | string | null;
+  plan_status?: 'trialing' | 'active' | 'expired' | 'canceled' | null;
 }
 
 export type SexoLote = 'Macho' | 'Fêmea' | 'Misto';

@@ -49,7 +49,7 @@ const PERIODOS = [
 ] as const;
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [transacoes, setTransacoes] = useState<Transacao[]>([]);
@@ -267,6 +267,25 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 lg:px-8 py-6 lg:py-8 pb-12 space-y-6">
+      {profile?.trial_end && profile?.plan_status === 'trialing' ? (
+        <div className="rounded-3xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
+          <p className="text-sm font-semibold">Teste grátis ativo</p>
+          <p className="text-sm mt-1 text-amber-700">
+            Seu trial termina em {new Date(profile.trial_end).toLocaleDateString('pt-BR')}. Aproveite todas as funcionalidades enquanto estiver ativo.
+          </p>
+        </div>
+      ) : profile?.plan === 'annual' ? (
+        <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-900">
+          <p className="text-sm font-semibold">Plano anual ativo</p>
+          <p className="text-sm mt-1 text-emerald-700">Seu acesso está liberado e você pode usar o app sem limites.</p>
+        </div>
+      ) : profile?.plan === 'lifetime' ? (
+        <div className="rounded-3xl border border-sky-200 bg-sky-50 p-4 text-sky-900">
+          <p className="text-sm font-semibold">Plano vitalício</p>
+          <p className="text-sm mt-1 text-sky-700">Acesso completo sem renovação. Continue monitorando sua fazenda com calma.</p>
+        </div>
+      ) : null}
+
       {/* Page header */}
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>
@@ -274,6 +293,26 @@ export default function Dashboard() {
           <p className="text-sm text-ink-500 mt-0.5">
             Acompanhe receitas, despesas e o patrimônio vivo da fazenda.
           </p>
+        </div>
+        <div className="hidden sm:flex items-center gap-3">
+          {profile?.trial_end && profile?.plan_status === 'trialing' ? (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900">
+              <p className="font-semibold">Teste grátis ativo</p>
+              <p className="text-xs text-amber-700 mt-0.5">
+                Termina em {new Date(profile.trial_end).toLocaleDateString('pt-BR')}.
+              </p>
+            </div>
+          ) : profile?.plan === 'annual' ? (
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-900">
+              <p className="font-semibold">Plano anual ativo</p>
+              <p className="text-xs text-emerald-700 mt-0.5">Acesso completo liberado.</p>
+            </div>
+          ) : profile?.plan === 'lifetime' ? (
+            <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-2 text-sm text-sky-900">
+              <p className="font-semibold">Plano vitalício</p>
+              <p className="text-xs text-sky-700 mt-0.5">Acesso sem renovação.</p>
+            </div>
+          ) : null}
         </div>
         <div className="flex items-center gap-2">
           <Select value={filterPeriodo} onValueChange={setFilterPeriodo}>

@@ -8,6 +8,13 @@
 -- 1. PROFILES - Gerenciamento de perfis de usuário
 -- ============================================================================
 
+-- Colunas para trial/licença
+ALTER TABLE IF EXISTS app_34b6ab49dc_profiles
+ADD COLUMN IF NOT EXISTS trial_start timestamptz,
+ADD COLUMN IF NOT EXISTS trial_end timestamptz,
+ADD COLUMN IF NOT EXISTS plan text,
+ADD COLUMN IF NOT EXISTS plan_status text;
+
 CREATE POLICY "Users can view their own profile"
 ON app_34b6ab49dc_profiles
 FOR SELECT

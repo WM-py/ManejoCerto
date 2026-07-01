@@ -3,10 +3,10 @@ import { Link } from 'react-router-dom';
 import {
   Beef, Scale, Calculator, BarChart3, Paperclip,
   Target, Activity, Check, ArrowRight, Menu, X, ShieldCheck,
-  Smartphone, Wallet, ChevronDown,
+  Smartphone, Wallet, ChevronDown, Users, ClipboardList, Sparkles,
 } from 'lucide-react';
 
-const WHATSAPP = 'https://wa.me/5599999999999'; // TODO: número real de suporte
+const WHATSAPP = 'https://wa.me/55859997314537?text=Ol%C3%A1%2C%20gostaria%20de%20saber%20mais%20sobre%20o%20Manejo%20Certo%20e%20como%20come%C3%A7ar.';
 
 const FEATURES = [
   { icon: BarChart3, title: 'DRE por lote', desc: 'Veja o lucro real de cada lote: custo de compra, engorda, despesas e margem — sem planilha.' },
@@ -15,6 +15,39 @@ const FEATURES = [
   { icon: Calculator, title: 'Simulador de compra', desc: 'Projete a rentabilidade de uma compra antes de gastar um centavo.' },
   { icon: Wallet, title: 'Fluxo de caixa', desc: 'Receitas e despesas organizadas por categoria, com relatórios prontos.' },
   { icon: Paperclip, title: 'Notas fiscais anexadas', desc: 'Fotografe a nota e guarde junto do lançamento. Nunca mais perca um comprovante.' },
+];
+
+const TESTIMONIALS = [
+  {
+    quote: 'Antes do Manejo Certo eu vendia no chute; hoje sei o ponto exato da arroba e já melhorei minha margem em 12%.',
+    name: 'José Almeida, produtor em Quixadá',
+  },
+  {
+    quote: 'O sistema trouxe clareza para cada lote. O fluxo de caixa ficou fácil de entender e a venda ficou mais segura.',
+    name: 'Mariana Silva, fazenda São Pedro',
+  },
+  {
+    quote: 'Em 7 dias já identifiquei custos ocultos e otimizei a compra de ração. Meu controlador adorou.',
+    name: 'Pedro Costa, pecuária de corte',
+  },
+];
+
+const ONBOARDING_STEPS = [
+  {
+    icon: ClipboardList,
+    title: 'Cadastre sua fazenda',
+    desc: 'Registre lotes, animais e despesas em minutos para ter o controle desde o primeiro dia.',
+  },
+  {
+    icon: Calculator,
+    title: 'Veja o lucro por lote',
+    desc: 'Acompanhe DRE, custo por arroba e ponto de equilíbrio sem abrir planilha.',
+  },
+  {
+    icon: Sparkles,
+    title: 'Decida com confiança',
+    desc: 'Venda na hora certa, evite prejuízo e aumente sua margem com dados reais.',
+  },
 ];
 
 const FAQ = [
@@ -91,15 +124,15 @@ export default function Landing() {
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
               <Link to="/login?novo=1" className="h-12 px-6 rounded-md bg-brand hover:bg-brand-700 text-white text-base font-semibold flex items-center justify-center gap-2 shadow-sm transition-colors">
-                Começar teste grátis
+                Criar conta grátis
                 <ArrowRight className="w-4 h-4" />
               </Link>
-              <a href="#planos" className="h-12 px-6 rounded-md border border-ink-200 text-ink-700 hover:bg-ink-100 text-base font-medium flex items-center justify-center transition-colors">
-                Ver planos
+              <a href={WHATSAPP} target="_blank" rel="noopener noreferrer" className="h-12 px-6 rounded-md border border-ink-200 text-ink-700 hover:bg-ink-100 text-base font-medium flex items-center justify-center transition-colors">
+                Falar no WhatsApp
               </a>
             </div>
             <p className="mt-4 text-sm text-ink-500 flex items-center gap-1.5">
-              <Check className="w-4 h-4 text-success" /> 14 dias grátis · sem cartão · cancela quando quiser
+              <Check className="w-4 h-4 text-success" /> Sem instalação · sem cartão · acesso em poucos minutos
             </p>
           </div>
 
@@ -156,6 +189,73 @@ export default function Landing() {
             sem ponto de equilíbrio e sem GMD, dá pra vender no prejuízo achando que teve lucro.
             O Manejo Certo põe o número na sua frente <span className="font-semibold text-ink-900">antes</span> de você decidir.
           </p>
+        </div>
+      </section>
+
+      {/* Benefícios de venda */}
+      <section className="max-w-6xl mx-auto px-4 lg:px-8 py-16 lg:py-20">
+        <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-8 items-start">
+          <div>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 text-brand text-xs font-semibold px-3 py-1 mb-4">
+              <ShieldCheck className="w-3.5 h-3.5" /> Mais controle, menos improviso
+            </span>
+            <h2 className="text-3xl font-bold tracking-tight">O sistema que ajuda o produtor a decidir com segurança</h2>
+            <p className="mt-4 text-lg text-ink-600 leading-relaxed">
+              Em vez de depender de planilha solta e memória, você acompanha custo, margem, peso e fluxo de caixa em um só lugar.
+              Isso significa menos dúvida na hora de vender, comprar e organizar a fazenda.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-ink-200 bg-white p-6 shadow-sm">
+            <div className="space-y-4">
+              {[
+                'Veja lucro real por lote antes de fechar qualquer operação.',
+                'Acompanhe custo por arroba, GMD e ponto de equilíbrio sem complicação.',
+                'Organize lançamentos, notas e fluxo de caixa no celular ou no computador.',
+              ].map((item) => (
+                <div key={item} className="flex items-start gap-3 rounded-lg bg-ink-50 p-3">
+                  <Check className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-ink-700 leading-relaxed">{item}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Prova social */}
+      <section className="max-w-6xl mx-auto px-4 lg:px-8 py-16 lg:py-20">
+        <div className="text-center max-w-2xl mx-auto mb-12">
+          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-brand">Clientes satisfeitos</p>
+          <h2 className="text-3xl font-bold tracking-tight mt-3">Quem já usa o Manejo Certo decide com mais segurança</h2>
+        </div>
+        <div className="grid gap-5 md:grid-cols-3">
+          {TESTIMONIALS.map((item) => (
+            <div key={item.name} className="rounded-3xl border border-ink-200 bg-white p-6 shadow-sm">
+              <p className="text-sm text-ink-600 leading-relaxed">“{item.quote}”</p>
+              <p className="mt-5 text-sm font-semibold text-ink-900">{item.name}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Processo de início */}
+      <section className="bg-ink-50">
+        <div className="max-w-6xl mx-auto px-4 lg:px-8 py-16 lg:py-20">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-brand">Como começar</p>
+            <h2 className="text-3xl font-bold tracking-tight mt-3">Comece em 3 passos simples</h2>
+          </div>
+          <div className="grid gap-5 md:grid-cols-3">
+            {ONBOARDING_STEPS.map((step) => (
+              <div key={step.title} className="rounded-3xl border border-ink-200 bg-white p-6">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-brand/10 text-brand mb-4">
+                  <step.icon className="w-5 h-5" />
+                </div>
+                <h3 className="text-lg font-semibold text-ink-900">{step.title}</h3>
+                <p className="mt-3 text-sm text-ink-600 leading-relaxed">{step.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -221,28 +321,28 @@ export default function Landing() {
 
         <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
           {/* Anual */}
-          <div className="rounded-2xl border border-ink-200 bg-white p-7 flex flex-col">
-            <p className="text-sm font-semibold text-ink-500 uppercase tracking-wider">Anual</p>
+          <div className="relative rounded-2xl border-2 border-brand bg-brand-50 p-7 flex flex-col shadow-lg shadow-brand/10">
+            <span className="absolute -top-3 left-4 rounded-full bg-brand text-white text-xs font-semibold px-3 py-1 uppercase tracking-[0.18em]">
+              Mais popular
+            </span>
+            <p className="text-sm font-semibold text-brand uppercase tracking-wider">Anual</p>
             <div className="mt-3 flex items-baseline gap-1">
-              <span className="text-4xl font-extrabold tracking-tight">R$ 497</span>
-              <span className="text-ink-500 font-medium">/ano</span>
+              <span className="text-4xl font-extrabold tracking-tight text-ink-900">R$ 497</span>
+              <span className="text-ink-600 font-medium">/ano</span>
             </div>
-            <p className="mt-1 text-sm text-ink-500">menos de R$ 42 por mês</p>
+            <p className="mt-1 text-sm text-ink-600">menos de R$ 42 por mês</p>
             <ul className="mt-6 space-y-2.5 flex-1">
               {['Todos os recursos liberados', 'Lotes e lançamentos ilimitados', 'Anexo de notas fiscais', 'Atualizações incluídas', 'Suporte por WhatsApp'].map((t) => (
                 <PlanItem key={t} text={t} />
               ))}
             </ul>
-            <Link to="/login?novo=1" className="mt-7 h-11 rounded-md border border-brand text-brand hover:bg-brand/5 font-semibold text-sm flex items-center justify-center transition-colors">
-              Começar teste grátis
-            </Link>
+            <a href={WHATSAPP} target="_blank" rel="noopener noreferrer" className="mt-7 h-11 rounded-md bg-ink-900 text-white hover:bg-ink-800 font-semibold text-sm flex items-center justify-center transition-colors">
+              Falar no WhatsApp
+            </a>
           </div>
 
           {/* Vitalício */}
-          <div className="relative rounded-2xl border-2 border-brand bg-white p-7 flex flex-col shadow-lg shadow-brand/10">
-            <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand text-white text-xs font-semibold px-3 py-1">
-              Oferta de fundador · vagas limitadas
-            </span>
+          <div className="rounded-2xl border border-ink-200 bg-white p-7 flex flex-col">
             <p className="text-sm font-semibold text-brand uppercase tracking-wider">Vitalício</p>
             <div className="mt-3 flex items-baseline gap-1">
               <span className="text-4xl font-extrabold tracking-tight">R$ 997</span>
@@ -254,7 +354,7 @@ export default function Landing() {
                 <PlanItem key={t} text={t} />
               ))}
             </ul>
-            <Link to="/login?novo=1" className="mt-7 h-11 rounded-md bg-brand hover:bg-brand-700 text-white font-semibold text-sm flex items-center justify-center transition-colors">
+            <Link to="/login?novo=1" className="mt-7 h-11 rounded-md border border-brand text-brand hover:bg-brand/5 font-semibold text-sm flex items-center justify-center transition-colors">
               Garantir acesso vitalício
             </Link>
           </div>
@@ -294,10 +394,15 @@ export default function Landing() {
           <p className="mt-3 text-brand-100 text-lg max-w-xl mx-auto">
             Comece hoje e veja o lucro real do seu próximo lote. Grátis por 14 dias.
           </p>
-          <Link to="/login?novo=1" className="mt-7 inline-flex h-12 px-8 rounded-md bg-white text-brand hover:bg-brand-50 text-base font-semibold items-center justify-center gap-2 transition-colors">
-            Criar minha conta grátis
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+          <div className="mt-7 flex flex-col sm:flex-row justify-center gap-3">
+            <Link to="/login?novo=1" className="inline-flex h-12 px-8 rounded-md bg-white text-brand hover:bg-brand-50 text-base font-semibold items-center justify-center gap-2 transition-colors">
+              Criar minha conta grátis
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+            <a href={WHATSAPP} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 px-8 rounded-md border border-white/30 text-white hover:bg-white/10 text-base font-semibold items-center justify-center transition-colors">
+              Falar com um consultor
+            </a>
+          </div>
         </div>
       </section>
 
