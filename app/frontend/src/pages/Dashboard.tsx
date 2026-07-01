@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { ComprovanteButton } from '@/components/ComprovanteButton';
 import {
   TrendingUp,
   TrendingDown,
@@ -457,6 +458,9 @@ export default function Dashboard() {
                             }`}>
                               {t.tipo === 'RECEITA' ? '+' : '−'} {formatBRL(Number(t.valor))}
                             </p>
+                          </div>
+                          <div className="flex items-center gap-0.5">
+                            {t.comprovante_path && <ComprovanteButton path={t.comprovante_path} />}
                           </div>
                           <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button

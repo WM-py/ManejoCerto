@@ -127,6 +127,13 @@ export function createMockClient() {
 
   return {
     from: (table: string) => new MockQuery(db, table),
+    storage: {
+      from: () => ({
+        upload: async (path: string) => ({ data: { path }, error: null }),
+        remove: async () => ({ data: [], error: null }),
+        createSignedUrl: async () => ({ data: { signedUrl: 'https://example.com/comprovante-demo.pdf' }, error: null }),
+      }),
+    },
     auth: {
       getSession: async () => ({ data: { session }, error: null }),
       getUser: async () => ({ data: { user: MOCK_USER }, error: null }),

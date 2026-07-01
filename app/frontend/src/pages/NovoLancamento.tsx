@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase, TABLES, formatBRL, maskBRLInput, parseBRLInput } from '@/lib/supabase';
+import { supabase, TABLES, formatBRL, maskBRLInput, parseBRLInput, uploadComprovante } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Lote, CATEGORIA_LABELS, CategoriaTransacao } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Combobox } from '@/components/ui/combobox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, TrendingUp, TrendingDown, Save, Plus, AlertCircle } from 'lucide-react';
+import { Loader2, TrendingUp, TrendingDown, Save, Plus, AlertCircle, Paperclip, X, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const HOJE = new Date().toISOString().split('T')[0];
@@ -39,6 +39,8 @@ export default function NovoLancamento() {
   const [lotes, setLotes] = useState<Lote[]>([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
+  const [comprovante, setComprovante] = useState<File | null>(null);
+  const comprovanteRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchLotes = async () => {
@@ -82,9 +84,22 @@ export default function NovoLancamento() {
   const resetForm = () => {
     setValor('');
     setDescricao('');
+    setComprovante(null);
+    if (comprovanteRef.current) comprovanteRef.current.value = '';
     setErrors({});
     // Mantém tipo, categoria, data e vínculo para lançamentos em sequência.
     setTimeout(() => valorRef.current?.focus(), 50);
+  };
+
+  const handleComprovante = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) { setComprovante(null); return; }
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ title: 'Arquivo muito grande', description: 'O comprovante deve ter até 10 MB.', variant: 'destructive' });
+      e.target.value = '';
+      return;
+    }
+    setComprovante(file);
   };
 
   const salvar = async (continuar: boolean) => {
@@ -98,6 +113,15 @@ export default function NovoLancamento() {
     setErrors({});
     setLoading(true);
     try {
+      // Sobe o comprovante antes de gravar (se houver).
+      let comprovantePath: string | null = null;
+      if (comprovante) {
+        comprovantePath = await uploadComprovante(user.id, comprovante);
+        if (!comprovantePath) {
+          throw new Error('Falha ao enviar o comprovante. Tente novamente.');
+        }
+      }
+
       const { error } = await supabase.from(TABLES.transacoes).insert({
         user_id: user.id,
         tipo,
@@ -106,6 +130,7 @@ export default function NovoLancamento() {
         data,
         lote_id: vincularLote && loteId ? loteId : null,
         descricao: descricao.trim(),
+        comprovante_path: comprovantePath,
       });
 
       if (error) throw error;
@@ -291,6 +316,56 @@ export default function NovoLancamento() {
                   </>
                 )}
               </div>
+            )}
+          </div>
+        </section>
+
+        {/* Comprovante */}
+        <section className="rounded-xl border border-ink-200 bg-white">
+          <div className="p-5">
+            <div className="flex items-center justify-between gap-3 mb-1">
+              <p className="text-sm font-semibold text-ink-900">Comprovante</p>
+              <span className="text-[11px] text-ink-400 font-medium">Opcional · até 10 MB</span>
+            </div>
+            <p className="text-xs text-ink-500 mb-3">
+              Anexe a foto ou PDF da nota fiscal / recibo. Fica guardado com segurança e só você acessa.
+            </p>
+
+            <input
+              ref={comprovanteRef}
+              type="file"
+              accept="image/*,application/pdf"
+              onChange={handleComprovante}
+              className="hidden"
+            />
+
+            {comprovante ? (
+              <div className="flex items-center gap-3 rounded-md border border-ink-200 bg-ink-100/40 px-3 py-2.5">
+                <div className="w-8 h-8 rounded-md bg-brand/10 text-brand flex items-center justify-center flex-shrink-0">
+                  <FileText className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-ink-900 truncate">{comprovante.name}</p>
+                  <p className="text-xs text-ink-500 tabular-nums">{(comprovante.size / 1024).toFixed(0)} KB</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setComprovante(null); if (comprovanteRef.current) comprovanteRef.current.value = ''; }}
+                  className="p-1.5 rounded hover:bg-danger-soft"
+                  title="Remover"
+                >
+                  <X className="w-4 h-4 text-danger" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => comprovanteRef.current?.click()}
+                className="w-full flex items-center justify-center gap-2 h-11 rounded-md border border-dashed border-ink-200 text-sm font-medium text-ink-500 hover:border-brand/50 hover:text-brand hover:bg-brand/[0.03] transition-colors"
+              >
+                <Paperclip className="w-4 h-4" />
+                Anexar comprovante
+              </button>
             )}
           </div>
         </section>

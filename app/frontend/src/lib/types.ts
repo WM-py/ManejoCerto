@@ -71,6 +71,7 @@ export interface Transacao {
   data: string;
   lote_id: string | null;
   descricao: string;
+  comprovante_path?: string | null;
   created_at: string;
 }
 

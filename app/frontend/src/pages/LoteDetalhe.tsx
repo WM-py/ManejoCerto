@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { gerarReciboPDF } from '@/lib/pdf';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { ComprovanteButton } from '@/components/ComprovanteButton';
 import {
   ArrowLeft,
   Beef,
@@ -987,6 +988,7 @@ export default function LoteDetalhe() {
                       {formatDate(t.data)} · {CATEGORIA_LABELS[t.categoria as CategoriaTransacao]}
                     </p>
                   </div>
+                  {t.comprovante_path && <ComprovanteButton path={t.comprovante_path} />}
                   <span className="text-sm font-semibold text-danger tabular-nums whitespace-nowrap">
                     − {formatBRL(Number(t.valor))}
                   </span>
@@ -1020,6 +1022,7 @@ export default function LoteDetalhe() {
                     </p>
                     <p className="text-xs text-ink-500 tabular-nums">{formatDate(t.data)}</p>
                   </div>
+                  {t.comprovante_path && <ComprovanteButton path={t.comprovante_path} />}
                   <span className={`text-sm font-semibold tabular-nums whitespace-nowrap ${
                     t.tipo === 'RECEITA' ? 'text-success' : 'text-danger'
                   }`}>

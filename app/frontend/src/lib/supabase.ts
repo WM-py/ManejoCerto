@@ -29,6 +29,27 @@ export const TABLES = {
   pesagens_lote: 'app_34b6ab49dc_pesagens_lote',
 } as const;
 
+// Storage: bucket privado de comprovantes (nota fiscal / recibo)
+export const COMPROVANTES_BUCKET = 'comprovantes';
+
+// Faz upload do comprovante e retorna o path salvo (ou null em erro).
+export async function uploadComprovante(userId: string, file: File): Promise<string | null> {
+  const ext = (file.name.split('.').pop() || 'bin').toLowerCase();
+  const path = `${userId}/${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage.from(COMPROVANTES_BUCKET).upload(path, file, {
+    contentType: file.type || undefined,
+    upsert: false,
+  });
+  if (error) return null;
+  return path;
+}
+
+// Gera uma URL assinada temporária para visualizar o comprovante.
+export async function getComprovanteUrl(path: string): Promise<string | null> {
+  const { data } = await supabase.storage.from(COMPROVANTES_BUCKET).createSignedUrl(path, 120);
+  return data?.signedUrl ?? null;
+}
+
 // Helper: convert KG to Arrobas (@ = kg / 30)
 export function kgToArrobas(kg: number): number {
   return kg / 30;
