@@ -63,6 +63,7 @@ const FAQ = [
 export default function Landing() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const heroImage = import.meta.env.VITE_HERO_IMAGE || '/login-bg.png';
   const mpAnnualUrl = getMercadoPagoPreferenceUrl('annual');
   const mpLifetimeUrl = getMercadoPagoPreferenceUrl('lifetime');
   const useMercadoPago = hasMercadoPagoConfigured();
@@ -114,6 +115,7 @@ export default function Landing() {
 
       {/* Hero */}
       <section id="topo" className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${heroImage})` }} />
         <div className="absolute inset-0 bg-gradient-to-b from-brand/[0.06] to-white" />
         <div className="relative max-w-6xl mx-auto px-4 lg:px-8 pt-16 pb-20 lg:pt-24 lg:pb-28 grid lg:grid-cols-2 gap-12 items-center">
           <div>
