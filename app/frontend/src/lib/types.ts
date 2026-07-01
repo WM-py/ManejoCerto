@@ -81,7 +81,13 @@ export type CategoriaTransacao =
   | 'INFRA'
   | 'MAQUINARIO'
   | 'PESSOAL'
-  | 'OUTROS';
+  | 'OUTROS'
+  | 'NUTRICAO'
+  | 'SANIDADE'
+  | 'COMBUSTIVEL'
+  | 'FRETE'
+  | 'ARRENDAMENTO'
+  | 'IMPOSTOS';
 
 export interface CompraVenda {
   id: string;
@@ -106,20 +112,32 @@ export interface Pesagem {
 export const CATEGORIA_LABELS: Record<CategoriaTransacao, string> = {
   VENDA_GADO: 'Venda de Gado',
   COMPRA_GADO: 'Compra de Gado',
+  NUTRICAO: 'Nutrição',
+  SANIDADE: 'Sanidade',
   INSUMOS: 'Insumos',
   INFRA: 'Infraestrutura',
   MAQUINARIO: 'Maquinário',
+  COMBUSTIVEL: 'Combustível',
+  FRETE: 'Frete / Transporte',
+  ARRENDAMENTO: 'Arrendamento',
   PESSOAL: 'Pessoal',
+  IMPOSTOS: 'Impostos / Taxas',
   OUTROS: 'Outros',
 };
 
 export const CATEGORIA_ICONS: Record<CategoriaTransacao, string> = {
   VENDA_GADO: 'TrendingUp',
   COMPRA_GADO: 'ShoppingCart',
+  NUTRICAO: 'Wheat',
+  SANIDADE: 'Syringe',
   INSUMOS: 'Package',
   INFRA: 'Building',
   MAQUINARIO: 'Wrench',
+  COMBUSTIVEL: 'Fuel',
+  FRETE: 'Truck',
+  ARRENDAMENTO: 'Sprout',
   PESSOAL: 'Users',
+  IMPOSTOS: 'Receipt',
   OUTROS: 'MoreHorizontal',
 };
 

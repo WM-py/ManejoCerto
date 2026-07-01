@@ -24,7 +24,8 @@ import {
 const PIE_COLORS = ['hsl(152, 55%, 23%)', 'hsl(222, 47%, 11%)', '#D97706', '#2563EB', '#DC2626', '#7C3AED', '#059669'];
 
 const ALL_CATEGORIAS: CategoriaTransacao[] = [
-  'VENDA_GADO', 'COMPRA_GADO', 'INSUMOS', 'INFRA', 'MAQUINARIO', 'PESSOAL', 'OUTROS',
+  'VENDA_GADO', 'COMPRA_GADO', 'NUTRICAO', 'SANIDADE', 'INSUMOS', 'INFRA',
+  'MAQUINARIO', 'COMBUSTIVEL', 'FRETE', 'ARRENDAMENTO', 'PESSOAL', 'IMPOSTOS', 'OUTROS',
 ];
 
 export default function Relatorios() {

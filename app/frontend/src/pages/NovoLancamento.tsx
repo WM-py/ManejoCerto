@@ -57,7 +57,10 @@ export default function NovoLancamento() {
     valorRef.current?.focus();
   }, []);
 
-  const categoriasDespesa: CategoriaTransacao[] = ['INSUMOS', 'INFRA', 'MAQUINARIO', 'PESSOAL', 'OUTROS'];
+  const categoriasDespesa: CategoriaTransacao[] = [
+    'NUTRICAO', 'SANIDADE', 'INSUMOS', 'INFRA', 'MAQUINARIO',
+    'COMBUSTIVEL', 'FRETE', 'ARRENDAMENTO', 'PESSOAL', 'IMPOSTOS', 'OUTROS',
+  ];
   const categoriasReceita: CategoriaTransacao[] = ['VENDA_GADO', 'OUTROS'];
 
   const valorNumerico = parseBRLInput(valor);
