@@ -6,6 +6,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import Landing from '@/pages/Landing';
 import Login from '@/pages/Login';
 import RedefinirSenha from '@/pages/RedefinirSenha';
+import { getMercadoPagoPreferenceUrl, hasMercadoPagoConfigured } from '@/lib/mercadopago';
 import Dashboard from '@/pages/Dashboard';
 import NovoLancamento from '@/pages/NovoLancamento';
 import CompraVenda from '@/pages/CompraVenda';
@@ -19,6 +20,8 @@ import Privacy from '@/pages/Privacy';
 
 function TrialGate({ children }: { children: React.ReactNode }) {
   const { user, profile, loading, profileLoading } = useAuth();
+  const annualCheckoutUrl = getMercadoPagoPreferenceUrl('annual');
+  const useMercadoPago = hasMercadoPagoConfigured();
 
   if (loading || profileLoading) {
     return (
@@ -63,12 +66,23 @@ function TrialGate({ children }: { children: React.ReactNode }) {
             >
               Voltar para Landing
             </a>
-            <a
-              href="mailto:suporte@manejocerto.com.br"
-              className="inline-flex h-12 items-center justify-center rounded-xl bg-brand px-5 text-sm font-semibold text-white hover:bg-brand-700"
-            >
-              Contatar suporte
-            </a>
+            {useMercadoPago && annualCheckoutUrl ? (
+              <a
+                href={annualCheckoutUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-12 items-center justify-center rounded-xl bg-brand px-5 text-sm font-semibold text-white hover:bg-brand-700"
+              >
+                Comprar plano anual
+              </a>
+            ) : (
+              <a
+                href="mailto:suporte@manejocerto.com.br"
+                className="inline-flex h-12 items-center justify-center rounded-xl bg-brand px-5 text-sm font-semibold text-white hover:bg-brand-700"
+              >
+                Contatar suporte
+              </a>
+            )}
           </div>
         </div>
       </div>

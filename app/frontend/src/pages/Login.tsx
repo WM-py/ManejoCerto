@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { FormEvent, ReactNode, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -10,11 +10,30 @@ import { useToast } from '@/hooks/use-toast';
 
 type Mode = 'login' | 'signup' | 'forgot';
 
+function BackgroundWrapper({ children }: { children: ReactNode }) {
+  return (
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        style={{
+          backgroundImage: `url(/login-bg.png)`,
+        }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-br from-ink-900/90 via-ink-900/70 to-brand/80" />
+      {children}
+    </div>
+  );
+}
+
 export default function Login() {
   const [searchParams] = useSearchParams();
   const [mode, setMode] = useState<Mode>(searchParams.get('novo') === '1' ? 'signup' : 'login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [city, setCity] = useState('');
+  const [herdSize, setHerdSize] = useState('');
   const [nomeFazenda, setNomeFazenda] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -22,19 +41,20 @@ export default function Login() {
   const [resetSent, setResetSent] = useState(false);
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
+  const fullNameRef = useRef<HTMLInputElement>(null);
   const nomeFazendaRef = useRef<HTMLInputElement>(null);
   const { signIn, signUp, resetPassword } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
     if (mode === 'signup') {
-      nomeFazendaRef.current?.focus();
+      fullNameRef.current?.focus();
     } else {
       emailRef.current?.focus();
     }
   }, [mode]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
@@ -60,10 +80,46 @@ export default function Login() {
         }
       } else {
         // signup
+        if (!fullName.trim()) {
+          toast({
+            title: 'Informe seu nome completo',
+            description: 'Precisamos saber quem está testando o sistema.',
+            variant: 'destructive',
+          });
+          setLoading(false);
+          return;
+        }
+        if (!phone.trim()) {
+          toast({
+            title: 'Informe seu WhatsApp',
+            description: 'Usamos o WhatsApp para contato rápido sobre seu teste.',
+            variant: 'destructive',
+          });
+          setLoading(false);
+          return;
+        }
+        if (!city.trim()) {
+          toast({
+            title: 'Informe sua cidade',
+            description: 'Isso ajuda a equipe a entender sua região.',
+            variant: 'destructive',
+          });
+          setLoading(false);
+          return;
+        }
         if (!nomeFazenda.trim()) {
           toast({
             title: 'Informe o nome da fazenda',
             description: 'Esse nome aparecerá no seu painel.',
+            variant: 'destructive',
+          });
+          setLoading(false);
+          return;
+        }
+        if (!herdSize.trim()) {
+          toast({
+            title: 'Informe o tamanho do rebanho',
+            description: 'Ajuda a sugerir o melhor suporte para seu teste.',
             variant: 'destructive',
           });
           setLoading(false);
@@ -79,7 +135,12 @@ export default function Login() {
           return;
         }
 
-        const { error } = await signUp(email, password, nomeFazenda.trim());
+        const { error } = await signUp(email, password, nomeFazenda.trim(), {
+          full_name: fullName.trim(),
+          telefone: phone.trim(),
+          cidade: city.trim(),
+          rebanho: herdSize.trim(),
+        });
         if (error) {
           toast({ title: 'Erro ao cadastrar', description: error.message, variant: 'destructive' });
         } else {
@@ -98,19 +159,6 @@ export default function Login() {
       setLoading(false);
     }
   };
-
-  const BackgroundWrapper = ({ children }: { children: React.ReactNode }) => (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{
-          backgroundImage: `url(/login-bg.png)`,
-        }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-br from-ink-900/90 via-ink-900/70 to-brand/80" />
-      {children}
-    </div>
-  );
 
   if (signUpSuccess) {
     return (
@@ -172,6 +220,8 @@ export default function Login() {
           <CardDescription className="text-gray-500 text-sm">
             {mode === 'forgot'
               ? 'Informe seu e-mail para recuperar o acesso'
+              : mode === 'signup'
+              ? 'Complete seu cadastro para iniciar o teste grátis e receber uma proposta comercial personalizada pelo WhatsApp.'
               : 'Gestão financeira para pecuária de corte'}
           </CardDescription>
         </CardHeader>
@@ -179,21 +229,95 @@ export default function Login() {
         <CardContent className="px-8 pb-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             {mode === 'signup' && (
-              <div className="space-y-2">
-                <Label htmlFor="nomeFazenda" className="text-ink-900 font-medium">
-                  Nome da fazenda
-                </Label>
-                <Input
-                  ref={nomeFazendaRef}
-                  id="nomeFazenda"
-                  type="text"
-                  placeholder="Ex: Fazenda Boa Vista"
-                  value={nomeFazenda}
-                  onChange={(e) => setNomeFazenda(e.target.value)}
-                  autoComplete="organization"
-                  required
-                  className="h-12 rounded-xl border-gray-200 focus:border-brand focus:ring-brand"
-                />
+              <div className="space-y-4">
+                <div className="rounded-3xl border border-ink-200 bg-ink-50 p-4 text-sm text-ink-700">
+                  <p className="font-semibold text-ink-900">Cadastro de teste e lead</p>
+                  <p className="mt-1 leading-relaxed">
+                    Esse formulário nos ajuda a entender seu negócio e entrar em contato pelo WhatsApp para ativar seu teste e oferecer suporte inicial.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="fullName" className="text-ink-900 font-medium">
+                    Nome completo
+                  </Label>
+                  <Input
+                    ref={fullNameRef}
+                    id="fullName"
+                    type="text"
+                    placeholder="Ex: João da Silva"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    autoComplete="name"
+                    required
+                    className="h-12 rounded-xl border-gray-200 focus:border-brand focus:ring-brand"
+                  />
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="phone" className="text-ink-900 font-medium">
+                      WhatsApp
+                    </Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="(85) 9 9973-1537"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      autoComplete="tel"
+                      required
+                      className="h-12 rounded-xl border-gray-200 focus:border-brand focus:ring-brand"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="city" className="text-ink-900 font-medium">
+                      Cidade / UF
+                    </Label>
+                    <Input
+                      id="city"
+                      type="text"
+                      placeholder="Ex: Fortaleza - CE"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      autoComplete="address-level2"
+                      required
+                      className="h-12 rounded-xl border-gray-200 focus:border-brand focus:ring-brand"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="nomeFazenda" className="text-ink-900 font-medium">
+                    Nome da fazenda
+                  </Label>
+                  <Input
+                    ref={nomeFazendaRef}
+                    id="nomeFazenda"
+                    type="text"
+                    placeholder="Ex: Fazenda Boa Vista"
+                    value={nomeFazenda}
+                    onChange={(e) => setNomeFazenda(e.target.value)}
+                    autoComplete="organization"
+                    required
+                    className="h-12 rounded-xl border-gray-200 focus:border-brand focus:ring-brand"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="herdSize" className="text-ink-900 font-medium">
+                    Tamanho do rebanho
+                  </Label>
+                  <Input
+                    id="herdSize"
+                    type="text"
+                    placeholder="Ex: 120 cabeças"
+                    value={herdSize}
+                    onChange={(e) => setHerdSize(e.target.value)}
+                    required
+                    className="h-12 rounded-xl border-gray-200 focus:border-brand focus:ring-brand"
+                  />
+                </div>
               </div>
             )}
 
@@ -209,6 +333,7 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
+                autoFocus={mode === 'login'}
                 required
                 className="h-12 rounded-xl border-gray-200 focus:border-brand focus:ring-brand"
               />
@@ -244,6 +369,7 @@ export default function Login() {
                   />
                   <button
                     type="button"
+                    onMouseDown={(e) => e.preventDefault()}
                     onPointerDown={(e) => e.preventDefault()}
                     onClick={() => setShowPassword(!showPassword)}
                     aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
@@ -261,8 +387,21 @@ export default function Login() {
               className="w-full h-14 rounded-xl text-base font-semibold bg-brand hover:bg-brand-700 text-white shadow-lg"
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
-              {mode === 'login' ? 'Entrar' : mode === 'signup' ? 'Criar Conta' : 'Enviar link de recuperação'}
+              {mode === 'login'
+                ? 'Entrar'
+                : mode === 'signup'
+                ? 'Quero testar agora'
+                : 'Enviar link de recuperação'}
             </Button>
+
+            {mode === 'signup' && (
+              <div className="rounded-3xl border border-ink-200 bg-ink-50 p-4 text-sm text-ink-700 mt-4">
+                <p className="font-semibold text-ink-900">Formulário de lead ativo</p>
+                <p className="mt-1 leading-relaxed">
+                  Após o cadastro, nossa equipe entra em contato pelo WhatsApp para ativar seu teste e ajudar você no primeiro acesso.
+                </p>
+              </div>
+            )}
           </form>
 
           <div className="mt-6 text-center space-y-2">

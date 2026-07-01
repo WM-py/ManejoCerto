@@ -5,8 +5,10 @@ import {
   Target, Activity, Check, ArrowRight, Menu, X, ShieldCheck,
   Smartphone, Wallet, ChevronDown, Users, ClipboardList, Sparkles,
 } from 'lucide-react';
+import { getMercadoPagoPreferenceUrl, hasMercadoPagoConfigured } from '@/lib/mercadopago';
 
 const WHATSAPP = 'https://wa.me/5585997314537?text=Ol%C3%A1%2C%20gostaria%20de%20saber%20mais%20sobre%20o%20Manejo%20Certo%20e%20como%20come%C3%A7ar.';
+const WHATSAPP_COMERCIAL = 'https://wa.me/5585997314537?text=Ol%C3%A1%2C%20quero%20comprar%20o%20Manejo%20Certo%20e%20receber%20uma%20proposta%20comercial.';
 
 const FEATURES = [
   { icon: BarChart3, title: 'DRE por lote', desc: 'Veja o lucro real de cada lote: custo de compra, engorda, despesas e margem — sem planilha.' },
@@ -61,6 +63,9 @@ const FAQ = [
 export default function Landing() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const mpAnnualUrl = getMercadoPagoPreferenceUrl('annual');
+  const mpLifetimeUrl = getMercadoPagoPreferenceUrl('lifetime');
+  const useMercadoPago = hasMercadoPagoConfigured();
 
   return (
     <div className="min-h-screen bg-white text-ink-900">
@@ -127,9 +132,15 @@ export default function Landing() {
                 Criar conta grátis
                 <ArrowRight className="w-4 h-4" />
               </Link>
-              <a href={WHATSAPP} target="_blank" rel="noopener noreferrer" className="h-12 px-6 rounded-md border border-ink-200 text-ink-700 hover:bg-ink-100 text-base font-medium flex items-center justify-center transition-colors">
-                Falar no WhatsApp
-              </a>
+              {useMercadoPago && mpAnnualUrl ? (
+                <a href={mpAnnualUrl} target="_blank" rel="noopener noreferrer" className="h-12 px-6 rounded-md border border-ink-200 text-ink-700 hover:bg-ink-100 text-base font-medium flex items-center justify-center transition-colors">
+                  Comprar plano anual
+                </a>
+              ) : (
+                <a href={WHATSAPP_COMERCIAL} target="_blank" rel="noopener noreferrer" className="h-12 px-6 rounded-md border border-ink-200 text-ink-700 hover:bg-ink-100 text-base font-medium flex items-center justify-center transition-colors">
+                  Falar com comercial
+                </a>
+              )}
             </div>
             <p className="mt-4 text-sm text-ink-500 flex items-center gap-1.5">
               <Check className="w-4 h-4 text-success" /> Sem instalação · sem cartão · acesso em poucos minutos
@@ -336,9 +347,15 @@ export default function Landing() {
                 <PlanItem key={t} text={t} />
               ))}
             </ul>
-            <a href={WHATSAPP} target="_blank" rel="noopener noreferrer" className="mt-7 h-11 rounded-md bg-ink-900 text-white hover:bg-ink-800 font-semibold text-sm flex items-center justify-center transition-colors">
-              Falar no WhatsApp
-            </a>
+            {useMercadoPago && mpAnnualUrl ? (
+              <a href={mpAnnualUrl} target="_blank" rel="noopener noreferrer" className="mt-7 h-11 rounded-md bg-ink-900 text-white hover:bg-ink-800 font-semibold text-sm flex items-center justify-center transition-colors">
+                Pagar anual agora
+              </a>
+            ) : (
+              <a href={WHATSAPP} target="_blank" rel="noopener noreferrer" className="mt-7 h-11 rounded-md bg-ink-900 text-white hover:bg-ink-800 font-semibold text-sm flex items-center justify-center transition-colors">
+                Falar no WhatsApp
+              </a>
+            )}
           </div>
 
           {/* Vitalício */}
@@ -354,14 +371,59 @@ export default function Landing() {
                 <PlanItem key={t} text={t} />
               ))}
             </ul>
-            <Link to="/login?novo=1" className="mt-7 h-11 rounded-md border border-brand text-brand hover:bg-brand/5 font-semibold text-sm flex items-center justify-center transition-colors">
-              Garantir acesso vitalício
-            </Link>
+            {useMercadoPago && mpLifetimeUrl ? (
+              <a href={mpLifetimeUrl} target="_blank" rel="noopener noreferrer" className="mt-7 h-11 rounded-md bg-brand text-white hover:bg-brand-700 font-semibold text-sm flex items-center justify-center transition-colors">
+                Pagar vitalício agora
+              </a>
+            ) : (
+              <Link to="/login?novo=1" className="mt-7 h-11 rounded-md border border-brand text-brand hover:bg-brand/5 font-semibold text-sm flex items-center justify-center transition-colors">
+                Garantir acesso vitalício
+              </Link>
+            )}
           </div>
         </div>
         <p className="text-center text-xs text-ink-500 mt-6 flex items-center justify-center gap-1.5">
           <Smartphone className="w-3.5 h-3.5" /> Funciona no celular e no computador · seus dados protegidos
         </p>
+      </section>
+
+      {/* Como contratar */}
+      <section className="bg-ink-50">
+        <div className="max-w-6xl mx-auto px-4 lg:px-8 py-16 lg:py-20">
+          <div className="text-center max-w-2xl mx-auto mb-10">
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-brand">Venda e implantação</p>
+            <h2 className="text-3xl font-bold tracking-tight mt-3">O caminho mais rápido para começar a usar</h2>
+            <p className="mt-4 text-ink-600 text-lg leading-relaxed">
+              Se estiver pronto para comprar, nosso time comercial envia proposta pelo WhatsApp e ajuda você a entrar no sistema no mesmo dia.
+            </p>
+          </div>
+          <div className="grid gap-5 md:grid-cols-3">
+            {[
+              { title: 'Clique no WhatsApp', desc: 'Abra uma conversa e fale com nosso time comercial.', icon: ClipboardList },
+              { title: 'Receba a proposta', desc: 'Condições e plano em menos de 10 minutos.', icon: Calculator },
+              { title: 'Comece a usar', desc: 'Ativamos seu acesso e você já entra no painel.', icon: Sparkles },
+            ].map((step) => (
+              <div key={step.title} className="rounded-3xl border border-ink-200 bg-white p-6 text-center">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-brand/10 text-brand mb-4 mx-auto">
+                  <step.icon className="w-5 h-5" />
+                </div>
+                <h3 className="text-lg font-semibold text-ink-900">{step.title}</h3>
+                <p className="mt-3 text-sm text-ink-600 leading-relaxed">{step.desc}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-10 text-center">
+            {useMercadoPago && mpAnnualUrl ? (
+              <a href={mpAnnualUrl} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 px-8 rounded-md bg-brand text-white hover:bg-brand-700 font-semibold items-center justify-center transition-colors">
+                Comprar anual agora
+              </a>
+            ) : (
+              <a href={WHATSAPP_COMERCIAL} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 px-8 rounded-md bg-brand text-white hover:bg-brand-700 font-semibold items-center justify-center transition-colors">
+                Falar com comercial agora
+              </a>
+            )}
+          </div>
+        </div>
       </section>
 
       {/* FAQ */}
