@@ -7,14 +7,19 @@ const usePreviewMock = import.meta.env.VITE_PREVIEW_MOCK === 'true';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseConfigValid = usePreviewMock || (!!supabaseUrl && !!supabaseAnonKey);
 
-if (!usePreviewMock && (!supabaseUrl || !supabaseAnonKey)) {
-  throw new Error('Missing Supabase environment variables. Please check your .env file.');
+if (!supabaseConfigValid) {
+  console.error(
+    'Missing Supabase environment variables. Configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel or .env.'
+  );
 }
 
 export const supabase = usePreviewMock
   ? (createMockClient() as unknown as ReturnType<typeof createClient>)
-  : createClient(supabaseUrl, supabaseAnonKey);
+  : createClient(supabaseUrl ?? '', supabaseAnonKey ?? '');
+
+export const supabaseReady = supabaseConfigValid;
 
 // Table names with session prefix
 export const TABLES = {

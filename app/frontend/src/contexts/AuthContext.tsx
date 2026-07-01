@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
-import { supabase, TABLES } from '@/lib/supabase';
+import { supabase, supabaseReady, TABLES } from '@/lib/supabase';
 import { Profile } from '@/lib/types';
 
 /**
@@ -73,47 +73,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const initAuth = async () => {
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-      setProfileLoading(true);
+      try {
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+        if (error) throw error;
 
-      if (currentSession?.user) {
-        await ensureProfile(currentSession.user);
-        const loadedProfile = await loadProfile(currentSession.user.id);
-        setProfile(loadedProfile);
-      } else {
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        setProfileLoading(true);
+
+        if (currentSession?.user) {
+          await ensureProfile(currentSession.user);
+          const loadedProfile = await loadProfile(currentSession.user.id);
+          setProfile(loadedProfile);
+        } else {
+          setProfile(null);
+        }
+      } catch (error) {
+        console.error('Falha ao inicializar autenticação:', error);
         setProfile(null);
+      } finally {
+        setLoading(false);
+        setProfileLoading(false);
       }
-
-      setLoading(false);
-      setProfileLoading(false);
     };
 
     initAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
-        setLoading(false);
+    let subscription: { unsubscribe: () => void } | null = null;
 
-        if (event === 'SIGNED_IN' && newSession?.user) {
-          setProfileLoading(true);
-          await ensureProfile(newSession.user);
-          const loadedProfile = await loadProfile(newSession.user.id);
-          setProfile(loadedProfile);
-          setProfileLoading(false);
+    if (supabaseReady) {
+      const { data } = supabase.auth.onAuthStateChange(
+        async (event, newSession) => {
+          try {
+            setSession(newSession);
+            setUser(newSession?.user ?? null);
+            setLoading(false);
+
+            if (event === 'SIGNED_IN' && newSession?.user) {
+              setProfileLoading(true);
+              await ensureProfile(newSession.user);
+              const loadedProfile = await loadProfile(newSession.user.id);
+              setProfile(loadedProfile);
+              setProfileLoading(false);
+            }
+
+            if (event === 'SIGNED_OUT') {
+              setProfile(null);
+              setProfileLoading(false);
+            }
+          } catch (error) {
+            console.error('Erro no callback de alteração de sessão:', error);
+            setProfileLoading(false);
+            setLoading(false);
+          }
         }
+      );
+      subscription = data.subscription;
+    }
 
-        if (event === 'SIGNED_OUT') {
-          setProfile(null);
-          setProfileLoading(false);
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
+    return () => subscription?.unsubscribe();
   }, []);
 
   const signUp = async (email: string, password: string, nomeFazenda?: string, metadata?: Record<string, string>) => {
