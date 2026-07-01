@@ -15,6 +15,7 @@ import Relatorios from '@/pages/Relatorios';
 import Parametros from '@/pages/Parametros';
 import Simulador from '@/pages/Simulador';
 import Pastos from '@/pages/Pastos';
+import Privacy from '@/pages/Privacy';
 
 function TrialGate({ children }: { children: React.ReactNode }) {
   const { user, profile, loading, profileLoading } = useAuth();
@@ -165,6 +166,7 @@ function AppRoutes() {
           </TrialGate>
         }
       />
+      <Route path="/privacidade" element={<Privacy />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

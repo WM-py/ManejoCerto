@@ -6,7 +6,7 @@ import {
   Smartphone, Wallet, ChevronDown, Users, ClipboardList, Sparkles,
 } from 'lucide-react';
 
-const WHATSAPP = 'https://wa.me/55859997314537?text=Ol%C3%A1%2C%20gostaria%20de%20saber%20mais%20sobre%20o%20Manejo%20Certo%20e%20como%20come%C3%A7ar.';
+const WHATSAPP = 'https://wa.me/5585997314537?text=Ol%C3%A1%2C%20gostaria%20de%20saber%20mais%20sobre%20o%20Manejo%20Certo%20e%20como%20come%C3%A7ar.';
 
 const FEATURES = [
   { icon: BarChart3, title: 'DRE por lote', desc: 'Veja o lucro real de cada lote: custo de compra, engorda, despesas e margem — sem planilha.' },

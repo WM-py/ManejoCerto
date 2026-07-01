@@ -27,18 +27,12 @@ export default function Login() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      if (mode === 'signup') {
-        nomeFazendaRef.current?.focus();
-      } else if (mode === 'forgot') {
-        emailRef.current?.focus();
-      } else {
-        emailRef.current?.focus();
-      }
-    }, 50);
-
-    return () => window.clearTimeout(timer);
-  }, [mode, signUpSuccess, resetSent]);
+    if (mode === 'signup') {
+      nomeFazendaRef.current?.focus();
+    } else {
+      emailRef.current?.focus();
+    }
+  }, [mode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -250,7 +244,7 @@ export default function Login() {
                   />
                   <button
                     type="button"
-                    onMouseDown={(e) => e.preventDefault()}
+                    onPointerDown={(e) => e.preventDefault()}
                     onClick={() => setShowPassword(!showPassword)}
                     aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
