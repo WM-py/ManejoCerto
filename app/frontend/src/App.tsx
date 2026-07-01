@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { Toaster } from '@/components/ui/toaster';
 import AppLayout from '@/components/AppLayout';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import Landing from '@/pages/Landing';
 import Login from '@/pages/Login';
 import RedefinirSenha from '@/pages/RedefinirSenha';
 import Dashboard from '@/pages/Dashboard';
@@ -52,9 +53,13 @@ function AppRoutes() {
       <Route
         path="/"
         element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
+          user ? (
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          ) : (
+            <Landing />
+          )
         }
       />
       <Route
