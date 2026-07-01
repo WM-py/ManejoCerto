@@ -21,6 +21,7 @@ import {
   Settings2,
   Calculator,
   MapPin,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface AppLayoutProps {
@@ -71,9 +72,19 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const [open, setOpen] = useState(false);
   const [nomeFazenda, setNomeFazenda] = useState('');
   const [profileStatus, setProfileStatus] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signOut } = useAuth();
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.rpc('mc_is_admin').then(({ data }) => setIsAdmin(Boolean(data)));
+  }, [user]);
+
+  const navGroups = isAdmin
+    ? [...NAV_GROUPS, { label: 'Administração', items: [{ path: '/admin', label: 'Liberar acesso', icon: ShieldCheck }] }]
+    : NAV_GROUPS;
 
   useEffect(() => {
     if (!user) return;
@@ -118,7 +129,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const NavList = ({ onNavigate }: { onNavigate: (path: string) => void }) => (
     <nav className="flex flex-col flex-1 px-3 py-4 overflow-y-auto">
       <div className="flex-1 space-y-5">
-        {NAV_GROUPS.map((group) => (
+        {navGroups.map((group) => (
           <div key={group.label}>
             <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-ink-400">
               {group.label}

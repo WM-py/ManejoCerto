@@ -16,6 +16,7 @@ import Relatorios from '@/pages/Relatorios';
 import Parametros from '@/pages/Parametros';
 import Simulador from '@/pages/Simulador';
 import Pastos from '@/pages/Pastos';
+import Admin from '@/pages/Admin';
 import Privacy from '@/pages/Privacy';
 
 function TrialGate({ children }: { children: React.ReactNode }) {
@@ -177,6 +178,14 @@ function AppRoutes() {
         element={
           <TrialGate>
             <Pastos />
+          </TrialGate>
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          <TrialGate>
+            <Admin />
           </TrialGate>
         }
       />
