@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { supabase, TABLES } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import {
@@ -76,6 +77,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signOut } = useAuth();
+  const isOnline = useOnlineStatus();
 
   useEffect(() => {
     if (!user) return;
@@ -209,9 +211,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
           </div>
 
           <div className="flex items-center gap-2 min-w-0">
-            <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-success-soft text-success text-[11px] font-semibold px-2.5 py-1 shrink-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-success" />
-              Conectado
+            <span
+              className={`hidden sm:inline-flex items-center gap-1.5 rounded-full text-[11px] font-semibold px-2.5 py-1 shrink-0 ${
+                isOnline ? 'bg-success-soft text-success' : 'bg-amber-100 text-amber-900'
+              }`}
+              title={isOnline ? 'Conectado à internet' : 'Sem conexão — modo offline'}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-success' : 'bg-amber-500'}`} />
+              {isOnline ? 'Conectado' : 'Offline'}
             </span>
             {profileStatus && (
               <span className="hidden sm:inline-flex items-center gap-1.5 min-w-0 max-w-[220px] truncate rounded-full bg-amber-100 text-amber-900 text-[11px] font-semibold px-2.5 py-1">
