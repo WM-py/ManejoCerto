@@ -294,29 +294,9 @@ export default function Dashboard() {
             Acompanhe receitas, despesas e o patrimônio vivo da fazenda.
           </p>
         </div>
-        <div className="hidden sm:flex items-center gap-3">
-          {profile?.trial_end && profile?.plan_status === 'trialing' ? (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900">
-              <p className="font-semibold">Teste grátis ativo</p>
-              <p className="text-xs text-amber-700 mt-0.5">
-                Termina em {new Date(profile.trial_end).toLocaleDateString('pt-BR')}.
-              </p>
-            </div>
-          ) : profile?.plan === 'annual' ? (
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-900">
-              <p className="font-semibold">Plano anual ativo</p>
-              <p className="text-xs text-emerald-700 mt-0.5">Acesso completo liberado.</p>
-            </div>
-          ) : profile?.plan === 'lifetime' ? (
-            <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-2 text-sm text-sky-900">
-              <p className="font-semibold">Plano vitalício</p>
-              <p className="text-xs text-sky-700 mt-0.5">Acesso sem renovação.</p>
-            </div>
-          ) : null}
-        </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Select value={filterPeriodo} onValueChange={setFilterPeriodo}>
-            <SelectTrigger className="h-9 w-[160px] rounded-md border-ink-200 text-sm bg-white">
+            <SelectTrigger className="h-9 w-[150px] shrink-0 rounded-md border-ink-200 text-sm bg-white">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

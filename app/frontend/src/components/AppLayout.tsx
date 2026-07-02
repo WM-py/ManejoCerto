@@ -61,8 +61,8 @@ function BrandMark() {
         <Beef className="w-5 h-5 text-white" strokeWidth={2.4} />
       </div>
       <div className="leading-tight">
-        <p className="text-[15px] font-bold text-ink-900 tracking-tight">Manejo Certo</p>
-        <p className="text-[10.5px] uppercase tracking-widest text-ink-400 font-semibold">Gestão Pecuária</p>
+        <p className="text-[15px] font-bold text-ink-900 tracking-tight whitespace-nowrap">Manejo Certo</p>
+        <p className="text-[10.5px] uppercase tracking-widest text-ink-400 font-semibold whitespace-nowrap">Gestão Pecuária</p>
       </div>
     </div>
   );
@@ -196,7 +196,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
               </SheetContent>
             </Sheet>
 
-            <div className="lg:hidden">
+            <div className="lg:hidden shrink-0">
               <BrandMark />
             </div>
 
@@ -208,13 +208,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-success-soft text-success text-[11px] font-semibold px-2.5 py-1">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-success-soft text-success text-[11px] font-semibold px-2.5 py-1 shrink-0">
               <span className="w-1.5 h-1.5 rounded-full bg-success" />
               Conectado
             </span>
             {profileStatus && (
-              <span className="inline-flex items-center gap-1.5 max-w-[220px] truncate rounded-full bg-amber-100 text-amber-900 text-[11px] font-semibold px-2.5 py-1">
+              <span className="hidden sm:inline-flex items-center gap-1.5 min-w-0 max-w-[220px] truncate rounded-full bg-amber-100 text-amber-900 text-[11px] font-semibold px-2.5 py-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                 <span className="truncate">{profileStatus}</span>
               </span>
