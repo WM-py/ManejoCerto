@@ -183,3 +183,209 @@ export function gerarReciboPDF(dados: ReciboData) {
   const filename = 'recibo_' + dados.tipo.toLowerCase() + '_' + dados.nomeLote.replace(/\s+/g, '_') + '_' + dados.data + '.pdf';
   doc.save(filename);
 }
+
+// ─── Relatório financeiro (PDF + CSV) ───────────────────────────────
+
+interface RelatorioTransacao {
+  data: string;
+  tipo: 'RECEITA' | 'DESPESA';
+  categoria: string; // já traduzido (label)
+  valor: number;
+  descricao: string;
+}
+
+export interface RelatorioData {
+  dataInicial: string; // yyyy-mm-dd
+  dataFinal: string; // yyyy-mm-dd
+  nomeUsuario: string;
+  totalEntradas: number;
+  totalSaidas: number;
+  saldoLiquido: number;
+  despesasPorCategoria: Array<{ name: string; value: number }>;
+  transacoes: RelatorioTransacao[];
+}
+
+const brDate = (iso: string) => iso.split('-').reverse().join('/');
+
+export function gerarRelatorioPDF(dados: RelatorioData) {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 20;
+  let y = 25;
+
+  const nomeUsuario = dados.nomeUsuario || 'Produtor Rural';
+  const periodo = brDate(dados.dataInicial) + ' a ' + brDate(dados.dataFinal);
+
+  // Header bar
+  doc.setFillColor(85, 107, 47);
+  doc.rect(0, 0, pageWidth, 40, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(22);
+  doc.setFont('helvetica', 'bold');
+  doc.text('MANEJO CERTO', margin, y);
+  y += 8;
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Relatório Financeiro', margin, y);
+
+  // Period badge
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  const badgeWidth = doc.getTextWidth(periodo) + 16;
+  doc.setFillColor(255, 255, 255);
+  doc.roundedRect(pageWidth - margin - badgeWidth, 15, badgeWidth, 16, 3, 3, 'F');
+  doc.setTextColor(85, 107, 47);
+  doc.text(periodo, pageWidth - margin - badgeWidth + 8, 25);
+
+  y = 52;
+  doc.setTextColor(54, 69, 79);
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Emitido por: ' + nomeUsuario, margin, y);
+  y += 10;
+
+  // KPI cards
+  const kpis: Array<[string, string, [number, number, number]]> = [
+    ['Total entradas', formatBRL(dados.totalEntradas), [5, 122, 85]],
+    ['Total saídas', formatBRL(dados.totalSaidas), [220, 38, 38]],
+    ['Saldo líquido', formatBRL(dados.saldoLiquido), dados.saldoLiquido >= 0 ? [5, 122, 85] : [220, 38, 38]],
+  ];
+  const gap = 6;
+  const kpiWidth = (pageWidth - margin * 2 - gap * 2) / 3;
+  kpis.forEach(([label, value, color], i) => {
+    const x = margin + i * (kpiWidth + gap);
+    doc.setFillColor(248, 249, 248);
+    doc.roundedRect(x, y, kpiWidth, 22, 2, 2, 'F');
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(120, 120, 120);
+    doc.text(label.toUpperCase(), x + 4, y + 7);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(color[0], color[1], color[2]);
+    doc.text(value, x + 4, y + 16);
+  });
+  y += 34;
+
+  // Despesas por categoria
+  if (dados.despesasPorCategoria.length > 0) {
+    const totalDespesas = dados.despesasPorCategoria.reduce((s, d) => s + d.value, 0);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(85, 107, 47);
+    doc.text('Despesas por categoria', margin, y);
+    y += 8;
+    doc.setFontSize(9);
+    dados.despesasPorCategoria.forEach((item) => {
+      const pct = totalDespesas > 0 ? ((item.value / totalDespesas) * 100).toFixed(1) : '0';
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(80, 80, 80);
+      doc.text(item.name, margin + 2, y);
+      doc.setTextColor(54, 69, 79);
+      doc.text(formatBRL(item.value) + '  (' + pct + '%)', pageWidth - margin - 2, y, { align: 'right' });
+      y += 6;
+    });
+    y += 6;
+  }
+
+  // Transactions table
+  const drawTableHeader = () => {
+    doc.setFillColor(85, 107, 47);
+    doc.rect(margin, y - 5, pageWidth - margin * 2, 9, 'F');
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(255, 255, 255);
+    doc.text('DATA', margin + 3, y + 1);
+    doc.text('TIPO', margin + 30, y + 1);
+    doc.text('CATEGORIA', margin + 52, y + 1);
+    doc.text('VALOR', pageWidth - margin - 3, y + 1, { align: 'right' });
+    y += 10;
+  };
+
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(85, 107, 47);
+  doc.text('Lançamentos (' + dados.transacoes.length + ')', margin, y);
+  y += 8;
+  drawTableHeader();
+
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  dados.transacoes.forEach((t, idx) => {
+    if (y > pageHeight - 20) {
+      doc.addPage();
+      y = 25;
+      drawTableHeader();
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+    }
+    if (idx % 2 === 0) {
+      doc.setFillColor(248, 249, 248);
+      doc.rect(margin, y - 5, pageWidth - margin * 2, 8, 'F');
+    }
+    doc.setTextColor(80, 80, 80);
+    doc.text(brDate(t.data), margin + 3, y);
+    doc.setTextColor(t.tipo === 'RECEITA' ? 5 : 220, t.tipo === 'RECEITA' ? 122 : 38, t.tipo === 'RECEITA' ? 85 : 38);
+    doc.text(t.tipo === 'RECEITA' ? 'Receita' : 'Despesa', margin + 30, y);
+    doc.setTextColor(80, 80, 80);
+    const cat = doc.splitTextToSize(t.categoria, 55)[0];
+    doc.text(cat, margin + 52, y);
+    doc.setTextColor(t.tipo === 'RECEITA' ? 5 : 220, t.tipo === 'RECEITA' ? 122 : 38, t.tipo === 'RECEITA' ? 85 : 38);
+    doc.text((t.tipo === 'RECEITA' ? '+ ' : '- ') + formatBRL(t.valor), pageWidth - margin - 3, y, { align: 'right' });
+    y += 8;
+  });
+
+  // Footer on every page
+  const pageCount = doc.getNumberOfPages();
+  for (let p = 1; p <= pageCount; p++) {
+    doc.setPage(p);
+    const footerY = pageHeight - 12;
+    doc.setDrawColor(200, 200, 200);
+    doc.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(150, 150, 150);
+    doc.text('Gerado pelo Manejo Certo em ' + new Date().toLocaleString('pt-BR'), margin, footerY);
+    doc.text('Página ' + p + ' de ' + pageCount, pageWidth - margin, footerY, { align: 'right' });
+  }
+
+  doc.save('relatorio_' + dados.dataInicial + '_a_' + dados.dataFinal + '.pdf');
+}
+
+export function gerarRelatorioCSV(dados: RelatorioData) {
+  const sep = ';'; // Excel pt-BR usa ponto-e-vírgula
+  const num = (v: number) => v.toFixed(2).replace('.', ','); // decimal com vírgula
+  const esc = (s: string) => '"' + (s || '').replace(/"/g, '""') + '"';
+
+  const linhas: string[] = [];
+  linhas.push('Relatório Financeiro - Manejo Certo');
+  linhas.push('Período' + sep + brDate(dados.dataInicial) + ' a ' + brDate(dados.dataFinal));
+  linhas.push('Emitido por' + sep + esc(dados.nomeUsuario || 'Produtor Rural'));
+  linhas.push('');
+  linhas.push('Total entradas' + sep + num(dados.totalEntradas));
+  linhas.push('Total saídas' + sep + num(dados.totalSaidas));
+  linhas.push('Saldo líquido' + sep + num(dados.saldoLiquido));
+  linhas.push('');
+  linhas.push(['Data', 'Tipo', 'Categoria', 'Valor', 'Descrição'].join(sep));
+  dados.transacoes.forEach((t) => {
+    linhas.push([
+      brDate(t.data),
+      t.tipo === 'RECEITA' ? 'Receita' : 'Despesa',
+      esc(t.categoria),
+      num(t.valor),
+      esc(t.descricao),
+    ].join(sep));
+  });
+
+  // BOM para acentos abrirem certo no Excel
+  const blob = new Blob(['﻿' + linhas.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'relatorio_' + dados.dataInicial + '_a_' + dados.dataFinal + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}

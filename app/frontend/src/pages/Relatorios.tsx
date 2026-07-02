@@ -5,11 +5,15 @@ import { Transacao, CATEGORIA_LABELS, CategoriaTransacao } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { gerarRelatorioPDF, gerarRelatorioCSV, fetchNomeUsuario, type RelatorioData } from '@/lib/pdf';
+import { toast } from 'sonner';
 import {
   Wallet,
   TrendingUp,
   TrendingDown,
   FileText,
+  FileDown,
+  Sheet,
   BarChart3,
 } from 'lucide-react';
 import {
@@ -18,7 +22,6 @@ import {
   Cell,
   ResponsiveContainer,
   Tooltip,
-  Legend,
 } from 'recharts';
 
 const PIE_COLORS = ['hsl(152, 55%, 23%)', 'hsl(222, 47%, 11%)', '#D97706', '#2563EB', '#DC2626', '#7C3AED', '#059669'];
@@ -31,12 +34,14 @@ const ALL_CATEGORIAS: CategoriaTransacao[] = [
 export default function Relatorios() {
   const { user } = useAuth();
 
-  // Date range: default to first day of current month → today
+  // Date range: default to last 30 days → today
   const now = new Date();
-  const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
   const today = now.toISOString().split('T')[0];
+  const thirtyDaysAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29)
+    .toISOString()
+    .split('T')[0];
 
-  const [dataInicial, setDataInicial] = useState(firstOfMonth);
+  const [dataInicial, setDataInicial] = useState(thirtyDaysAgo);
   const [dataFinal, setDataFinal] = useState(today);
   const [selectedCategorias, setSelectedCategorias] = useState<Set<CategoriaTransacao>>(new Set(ALL_CATEGORIAS));
   const [transacoes, setTransacoes] = useState<Transacao[]>([]);
@@ -108,6 +113,46 @@ export default function Relatorios() {
 
   const totalDespesasPie = pieData.reduce((s, d) => s + d.value, 0);
 
+  // Build the shared payload for PDF/CSV export
+  const buildRelatorioData = useCallback(async (): Promise<RelatorioData> => {
+    const nomeUsuario = user ? await fetchNomeUsuario(user.id) : 'Produtor Rural';
+    return {
+      dataInicial,
+      dataFinal,
+      nomeUsuario,
+      totalEntradas,
+      totalSaidas,
+      saldoLiquido,
+      despesasPorCategoria: pieData,
+      transacoes: filtered.map((t) => ({
+        data: t.data,
+        tipo: t.tipo,
+        categoria: CATEGORIA_LABELS[t.categoria as CategoriaTransacao] || t.categoria,
+        valor: Number(t.valor),
+        descricao: t.descricao || '',
+      })),
+    };
+  }, [user, dataInicial, dataFinal, totalEntradas, totalSaidas, saldoLiquido, pieData, filtered]);
+
+  const [exporting, setExporting] = useState(false);
+
+  const handleExport = async (formato: 'pdf' | 'csv') => {
+    if (filtered.length === 0) {
+      toast.error('Nenhum lançamento no período para exportar.');
+      return;
+    }
+    setExporting(true);
+    try {
+      const dados = await buildRelatorioData();
+      if (formato === 'pdf') gerarRelatorioPDF(dados);
+      else gerarRelatorioCSV(dados);
+    } catch {
+      toast.error('Não foi possível gerar o relatório.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   // Custom pie tooltip
   const PieTooltipContent = ({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number }> }) => {
     if (!active || !payload || payload.length === 0) return null;
@@ -117,21 +162,6 @@ export default function Relatorios() {
       <div className="bg-white rounded-md border border-ink-200 shadow-md px-3 py-2">
         <p className="text-xs font-semibold text-ink-900">{item.name}</p>
         <p className="text-xs text-ink-500 tabular-nums">{formatBRL(item.value)} ({pct}%)</p>
-      </div>
-    );
-  };
-
-  // Custom pie legend
-  const renderPieLegend = ({ payload }: { payload?: Array<{ value: string; color: string }> }) => {
-    if (!payload) return null;
-    return (
-      <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 mt-2">
-        {payload.map((entry, idx) => (
-          <div key={idx} className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-            <span className="text-[11px] text-ink-500">{entry.value}</span>
-          </div>
-        ))}
       </div>
     );
   };
@@ -148,6 +178,26 @@ export default function Relatorios() {
           <p className="text-sm text-ink-500 mt-0.5">
             Análise detalhada de receitas e despesas por período.
           </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => handleExport('csv')}
+            disabled={exporting || loading || filtered.length === 0}
+            className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-ink-200 bg-white text-sm font-medium text-ink-700 hover:border-ink-400 hover:text-ink-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Sheet className="w-4 h-4" strokeWidth={2} />
+            CSV
+          </button>
+          <button
+            type="button"
+            onClick={() => handleExport('pdf')}
+            disabled={exporting || loading || filtered.length === 0}
+            className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md bg-brand text-white text-sm font-medium hover:bg-brand/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <FileDown className="w-4 h-4" strokeWidth={2} />
+            PDF
+          </button>
         </div>
       </div>
 
@@ -236,13 +286,12 @@ export default function Relatorios() {
               <div className="h-56">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie data={pieData} cx="50%" cy="45%" innerRadius={42} outerRadius={80} paddingAngle={3} dataKey="value" stroke="none">
+                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={42} outerRadius={80} paddingAngle={3} dataKey="value" stroke="none">
                       {pieData.map((_entry, index) => (
                         <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                       ))}
                     </Pie>
                     <Tooltip content={<PieTooltipContent />} />
-                    <Legend content={renderPieLegend} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -285,7 +334,45 @@ export default function Relatorios() {
               <p className="text-sm text-ink-500">Nenhuma transação encontrada no período.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            {/* Mobile: card list (a tabela cortava a coluna Valor) */}
+            <ul className="md:hidden divide-y divide-ink-200">
+              {filtered.map((t) => (
+                <li key={t.id} className="px-4 py-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant="outline"
+                          className={`rounded-full text-[10px] px-2 py-0 font-medium ${
+                            t.tipo === 'RECEITA'
+                              ? 'border-success/30 bg-success-soft text-success'
+                              : 'border-danger/30 bg-danger-soft text-danger'
+                          }`}
+                        >
+                          {t.tipo === 'RECEITA' ? 'Receita' : 'Despesa'}
+                        </Badge>
+                        <span className="text-xs text-ink-500 tabular-nums whitespace-nowrap">{formatDate(t.data)}</span>
+                      </div>
+                      <p className="text-sm text-ink-900 mt-1 truncate">
+                        {CATEGORIA_LABELS[t.categoria as CategoriaTransacao]}
+                      </p>
+                      {t.descricao && (
+                        <p className="text-xs text-ink-500 mt-0.5 truncate">{t.descricao}</p>
+                      )}
+                    </div>
+                    <span className={`text-sm font-semibold tabular-nums whitespace-nowrap flex-shrink-0 ${
+                      t.tipo === 'RECEITA' ? 'text-success' : 'text-danger'
+                    }`}>
+                      {t.tipo === 'RECEITA' ? '+' : '−'} {formatBRL(Number(t.valor))}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            {/* Desktop/tablet: table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-ink-100/40">
                   <tr>
@@ -328,6 +415,7 @@ export default function Relatorios() {
                 </tbody>
               </table>
             </div>
+            </>
           )}
         </section>
       </div>
