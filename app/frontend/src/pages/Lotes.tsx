@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, TABLES, formatDate } from '@/lib/supabase';
 import { Lote, SexoLote, calcularCategoria } from '@/lib/types';
+import * as loteRepo from '@/lib/repositories/loteRepo';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -111,90 +112,8 @@ export default function Lotes() {
         throw new Error('Você não tem permissão para excluir este lote');
       }
 
-      // Primeiro, buscar transações relacionadas ao lote
-      const { data: transacoes, error: transacoesError } = await supabase
-        .from(TABLES.transacoes)
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('lote_id', loteId);
-
-      if (transacoesError) throw transacoesError;
-
-      const transacaoIds = (transacoes || []).map((transacao) => transacao.id);
-
-      // Deletar compras_vendas vinculadas às transações encontradas
-      if (transacaoIds.length > 0) {
-        const { error: comprasVendasPorTransacaoError } = await supabase
-          .from(TABLES.compras_vendas)
-          .delete()
-          .in('transacao_id', transacaoIds);
-
-        if (comprasVendasPorTransacaoError) throw comprasVendasPorTransacaoError;
-      }
-
-      // Lista de tabelas dependentes (excluindo transacoes que já foram processadas)
-      const tabelasDependentes = [
-        TABLES.pesagens,
-        TABLES.pesagens_lote,
-        TABLES.baixas,
-      ] as const;
-
-      // Deletar registros das tabelas dependentes
-      for (const tabela of tabelasDependentes) {
-        const { error } = await supabase.from(tabela).delete().eq('user_id', user.id).eq('lote_id', loteId);
-        if (error) throw error;
-      }
-
-      // Deletar transações (após ter deletado compras_vendas relacionadas)
-      if (transacaoIds.length > 0) {
-        const { error: transacoesDeleteError } = await supabase
-          .from(TABLES.transacoes)
-          .delete()
-          .in('id', transacaoIds)
-          .eq('user_id', user.id);
-
-        if (transacoesDeleteError) throw transacoesDeleteError;
-      }
-
-      // Verificar se ainda há dependências restantes
-      const todasTabelas = [
-        TABLES.compras_vendas,
-        TABLES.pesagens,
-        TABLES.pesagens_lote,
-        TABLES.baixas,
-        TABLES.transacoes,
-      ] as const;
-
-      const pendencias = await Promise.all(
-        todasTabelas.map(async (tabela) => {
-          const query = supabase.from(tabela).select('*', { count: 'exact', head: true }).eq('lote_id', loteId);
-          if (tabela !== TABLES.compras_vendas) {
-            query.eq('user_id', user.id);
-          }
-
-          const { count, error } = await query;
-
-          if (error) throw error;
-
-          return { tabela, count: count || 0 };
-        })
-      );
-
-      const dependenciasRestantes = pendencias.filter((item) => item.count > 0);
-
-      if (dependenciasRestantes.length > 0) {
-        const details = dependenciasRestantes.map((item) => `${item.tabela}: ${item.count}`).join(', ');
-        throw new Error(`Ainda existem registros vinculados a este lote: ${details}`);
-      }
-
-      // Finalmente, deletar o lote
-      const { error: loteError } = await supabase
-        .from(TABLES.lotes)
-        .delete()
-        .eq('user_id', user.id)
-        .eq('id', loteId);
-
-      if (loteError) throw loteError;
+      // Exclusão em cascata (animais/vínculos/pesagens/financeiro + legado) no servidor
+      await loteRepo.excluirLote(loteId);
 
       toast({ title: 'Lote excluído com sucesso' });
       await fetchLotes();

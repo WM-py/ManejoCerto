@@ -7,7 +7,7 @@
 import { buildMockDB, MOCK_USER } from './mockData';
 
 type Row = Record<string, any>;
-type Filter = { type: 'eq' | 'neq' | 'gte' | 'lte' | 'gt' | 'lt' | 'in'; col: string; val: any };
+type Filter = { type: 'eq' | 'neq' | 'gte' | 'lte' | 'gt' | 'lt' | 'in' | 'is'; col: string; val: any };
 
 const uid = () =>
   (globalThis.crypto?.randomUUID?.() ?? `mock-${Date.now()}-${Math.random().toString(16).slice(2)}`);
@@ -41,6 +41,7 @@ class MockQuery implements PromiseLike<any> {
   gt(col: string, val: any) { this.filters.push({ type: 'gt', col, val }); return this; }
   lt(col: string, val: any) { this.filters.push({ type: 'lt', col, val }); return this; }
   in(col: string, vals: any[]) { this.filters.push({ type: 'in', col, val: vals }); return this; }
+  is(col: string, val: any) { this.filters.push({ type: 'is', col, val }); return this; }
   order(col: string, opts?: { ascending?: boolean }) { this.orderBy = { col, asc: opts?.ascending !== false }; return this; }
   limit(n: number) { this.limitN = n; return this; }
   single() { this.mode = 'single'; return this; }
@@ -57,6 +58,7 @@ class MockQuery implements PromiseLike<any> {
         case 'gt': return v > f.val;
         case 'lt': return v < f.val;
         case 'in': return (f.val as any[]).includes(v);
+        case 'is': return f.val === null ? (v === null || v === undefined) : v === f.val;
         default: return true;
       }
     });
@@ -134,6 +136,9 @@ export function createMockClient() {
           return { data: true, error: null };
         case 'mc_has_active_access':
           return { data: true, error: null };
+        // Sprint 0: no preview, criar_lote retorna um id fake; os demais são no-op.
+        case 'app_34b6ab49dc_criar_lote_com_animais':
+          return { data: uid(), error: null };
         default:
           return { data: null, error: null };
       }

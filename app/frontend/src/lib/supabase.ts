@@ -27,11 +27,33 @@ export const TABLES = {
   lotes: 'app_34b6ab49dc_lotes',
   transacoes: 'app_34b6ab49dc_transacoes',
   compras_vendas: 'app_34b6ab49dc_compras_vendas',
-  pesagens: 'app_34b6ab49dc_pesagens',
+  pesagens: 'app_34b6ab49dc_pesagens', // legado (peso médio) — a deprecar
   parametros_fazenda: 'app_34b6ab49dc_parametros_fazenda',
   pastos: 'app_34b6ab49dc_pastos',
   baixas: 'app_34b6ab49dc_baixas',
-  pesagens_lote: 'app_34b6ab49dc_pesagens_lote',
+  pesagens_lote: 'app_34b6ab49dc_pesagens_lote', // legado (peso total) — a deprecar
+  // Sprint 0 — modelo por animal
+  animais: 'app_34b6ab49dc_animais',
+  lote_animais: 'app_34b6ab49dc_lote_animais',
+  pesagem_eventos: 'app_34b6ab49dc_pesagem_eventos',
+  pesagens_animal: 'app_34b6ab49dc_pesagens_animal',
+} as const;
+
+// Views (somente leitura)
+export const VIEWS = {
+  gmd_animal: 'app_34b6ab49dc_v_gmd_animal',
+  gmd_lote_evento: 'app_34b6ab49dc_v_gmd_lote_evento',
+  gmd_lote_individual: 'app_34b6ab49dc_v_gmd_lote_individual',
+  lote_rebanho: 'app_34b6ab49dc_v_lote_rebanho',
+} as const;
+
+// Funções (RPC)
+export const RPC = {
+  criarLoteComAnimais: 'app_34b6ab49dc_criar_lote_com_animais',
+  registrarPesagemLoteTotal: 'app_34b6ab49dc_registrar_pesagem_lote_total',
+  registrarBaixa: 'app_34b6ab49dc_registrar_baixa',
+  registrarVendaSaida: 'app_34b6ab49dc_registrar_venda_saida',
+  excluirLote: 'app_34b6ab49dc_excluir_lote',
 } as const;
 
 // Storage: bucket privado de comprovantes (nota fiscal / recibo)

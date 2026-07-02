@@ -114,6 +114,106 @@ export interface Pesagem {
   created_at: string;
 }
 
+// ============================================================================
+// Sprint 0 — Modelo por animal (brinco). Aditivo; convive com o legado acima.
+// ============================================================================
+
+export type StatusAnimal = 'ativo' | 'vendido' | 'morto' | 'transferido';
+
+/** Identidade individual do animal. Persiste entre lotes. */
+export interface Animal {
+  id: string;
+  user_id: string;
+  brinco_visual: string | null;
+  brinco_rfid: string | null;
+  sexo: 'Macho' | 'Fêmea' | null;
+  raca: string | null;
+  data_nascimento: string | null;
+  origem: string | null;
+  status: StatusAnimal;
+  observacao: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+/** Vínculo animal↔lote por período (data_saida null = ativo no lote). */
+export interface LoteAnimal {
+  id: string;
+  user_id: string;
+  animal_id: string;
+  lote_id: string;
+  data_entrada: string;
+  peso_entrada_kg: number | null;
+  data_saida: string | null;
+  motivo_saida: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export type TipoPesagemEvento = 'individual' | 'lote_total';
+
+/** Sessão de pesagem no curral. Guarda o snapshot de cabeças no lote_total. */
+export interface PesagemEvento {
+  id: string;
+  user_id: string;
+  lote_id: string;
+  data_pesagem: string;
+  tipo: TipoPesagemEvento;
+  peso_total_kg: number | null;
+  qtd_cabecas_pesadas: number | null;
+  observacao: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+/** Pesagem por animal (base do ML). Sem GMD persistido — é derivado nas views. */
+export interface PesagemAnimal {
+  id: string;
+  user_id: string;
+  animal_id: string;
+  lote_id: string | null;
+  evento_id: string | null;
+  data_pesagem: string;
+  peso_kg: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+// ── Views (somente leitura) ────────────────────────────────────────────────
+
+/** v_gmd_animal — GMD entre pesagens consecutivas do mesmo animal. */
+export interface GmdAnimal {
+  animal_id: string;
+  lote_id: string | null;
+  data_pesagem: string;
+  peso_kg: number;
+  peso_ant: number | null;
+  data_ant: string | null;
+  gmd_kg_dia: number | null;
+}
+
+/** v_gmd_lote_evento — GMD do lote via peso total, usando o snapshot congelado. */
+export interface GmdLoteEvento {
+  lote_id: string;
+  data_pesagem: string;
+  peso_medio: number;
+  peso_medio_ant: number | null;
+  gmd_kg_dia: number | null;
+}
+
+/** v_lote_rebanho — contagens de cabeças derivadas do vínculo (fonte de verdade). */
+export interface LoteRebanho {
+  lote_id: string;
+  cabecas_vivas: number;
+  cabecas_total: number;
+  cabecas_vendidas: number;
+  cabecas_baixa: number;
+}
+
 export const CATEGORIA_LABELS: Record<CategoriaTransacao, string> = {
   VENDA_GADO: 'Venda de Gado',
   COMPRA_GADO: 'Compra de Gado',

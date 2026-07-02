@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase, TABLES, formatBRL, kgToArrobas } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Lote, Pasto } from '@/lib/types';
+import * as loteRepo from '@/lib/repositories/loteRepo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -118,28 +119,16 @@ export default function CompraVenda() {
 
       if (operacao === 'COMPRA') {
         const pesoEntradaKg = Number(pesoTotalKg) / Number(qtdCabecas);
-        const insertData: Record<string, unknown> = {
-          user_id: user.id,
-          nome_lote: nomeLote.trim(),
-          qtd_cabecas: Number(qtdCabecas),
-          qtd_cabecas_vendidas: 0,
-          status: 'ativo',
-          data_entrada: data,
-          peso_entrada_kg: pesoEntradaKg,
+        // RPC transacional: cria o lote E gera N animais + vínculos (brinco provisório)
+        targetLoteId = await loteRepo.criarLoteComAnimais({
+          nomeLote: nomeLote.trim(),
+          qtdCabecas: Number(qtdCabecas),
+          pesoEntradaKg,
+          dataEntrada: data,
+          pastoId: pastoId && pastoId !== 'none' ? pastoId : null,
           sexo,
           categoria: categoriaLote,
-        };
-        if (pastoId) {
-          insertData.pasto_id = pastoId;
-        }
-        const { data: newLote, error: loteError } = await supabase
-          .from(TABLES.lotes)
-          .insert(insertData)
-          .select()
-          .single();
-
-        if (loteError) throw loteError;
-        targetLoteId = newLote.id;
+        });
       } else {
         const selectedLote = lotes.find((l) => l.id === loteId);
         if (selectedLote) targetLoteName = selectedLote.nome_lote;
@@ -172,14 +161,12 @@ export default function CompraVenda() {
       if (cvError) throw cvError;
 
       if (operacao === 'VENDA') {
-        const selectedLote = lotes.find((l) => l.id === loteId);
-        if (selectedLote) {
-          const newVendidas = selectedLote.qtd_cabecas_vendidas + Number(qtdCabecas);
-          await supabase
-            .from(TABLES.lotes)
-            .update({ qtd_cabecas_vendidas: newVendidas })
-            .eq('id', loteId);
-        }
+        // RPC: fecha N vínculos (motivo='venda'), marca animais e atualiza o cache
+        await loteRepo.registrarVendaSaida({
+          loteId: targetLoteId,
+          qtd: Number(qtdCabecas),
+          data,
+        });
       }
 
       // Save last transaction for PDF

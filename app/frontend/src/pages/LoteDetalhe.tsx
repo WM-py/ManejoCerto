@@ -1,8 +1,19 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { supabase, TABLES, formatBRL, formatDate, kgToArrobas, daysBetween } from '@/lib/supabase';
+import { formatBRL, formatDate, kgToArrobas, daysBetween } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { Lote, Transacao, CompraVenda, Pesagem, PesagemLote, Baixa, CATEGORIA_LABELS, CategoriaTransacao } from '@/lib/types';
+import {
+  Lote,
+  Transacao,
+  CompraVenda,
+  Baixa,
+  PesagemEvento,
+  GmdLoteEvento,
+  LoteRebanho,
+  CATEGORIA_LABELS,
+  CategoriaTransacao,
+} from '@/lib/types';
+import * as loteRepo from '@/lib/repositories/loteRepo';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -37,72 +48,73 @@ export default function LoteDetalhe() {
   const { toast } = useToast();
 
   const [lote, setLote] = useState<Lote | null>(null);
+  const [rebanho, setRebanho] = useState<LoteRebanho | null>(null);
   const [transacoes, setTransacoes] = useState<Transacao[]>([]);
   const [comprasVendas, setComprasVendas] = useState<CompraVenda[]>([]);
-  const [pesagens, setPesagens] = useState<Pesagem[]>([]);
-  const [pesagensLote, setPesagensLote] = useState<PesagemLote[]>([]);
+  const [eventos, setEventos] = useState<PesagemEvento[]>([]);
+  const [gmdLote, setGmdLote] = useState<GmdLoteEvento[]>([]);
   const [baixas, setBaixas] = useState<Baixa[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Weighing form state (peso médio - legacy)
-  const [showPesagemForm, setShowPesagemForm] = useState(false);
-  const [pesagemPeso, setPesagemPeso] = useState('');
-  const [pesagemData, setPesagemData] = useState(new Date().toISOString().split('T')[0]);
-  const [savingPesagem, setSavingPesagem] = useState(false);
-
-  // Pesagem Lote form (peso total)
+  // Pesagem de lote (peso total) — snapshot de cabeças é feito no servidor (RPC)
   const [showPesagemLoteForm, setShowPesagemLoteForm] = useState(false);
   const [pesagemLotePesoTotal, setPesagemLotePesoTotal] = useState('');
   const [pesagemLoteData, setPesagemLoteData] = useState(new Date().toISOString().split('T')[0]);
   const [savingPesagemLote, setSavingPesagemLote] = useState(false);
-  const [deletingPesagemLoteId, setDeletingPesagemLoteId] = useState<string | null>(null);
+  const [deletingEventoId, setDeletingEventoId] = useState<string | null>(null);
+  const [eventoParaExcluir, setEventoParaExcluir] = useState<string | null>(null);
 
-  // Baixa form
+  // Baixa
   const [showBaixaForm, setShowBaixaForm] = useState(false);
   const [baixaQtd, setBaixaQtd] = useState('1');
   const [baixaMotivo, setBaixaMotivo] = useState('');
   const [baixaData, setBaixaData] = useState(new Date().toISOString().split('T')[0]);
   const [savingBaixa, setSavingBaixa] = useState(false);
-  const [deletingPesagemId, setDeletingPesagemId] = useState<string | null>(null);
-  const [pesagemLoteParaExcluir, setPesagemLoteParaExcluir] = useState<string | null>(null);
-  const [pesagemParaExcluir, setPesagemParaExcluir] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!id || !user) return;
     setLoading(true);
-
-    const [loteRes, transRes, cvRes, pesRes, pesLoteRes, baixasRes] = await Promise.all([
-      supabase.from(TABLES.lotes).select('*').eq('id', id).single(),
-      supabase.from(TABLES.transacoes).select('*').eq('user_id', user?.id).eq('lote_id', id).order('data', { ascending: false }),
-      supabase.from(TABLES.compras_vendas).select('*').eq('lote_id', id).order('created_at', { ascending: false }),
-      supabase.from(TABLES.pesagens).select('*').eq('user_id', user?.id).eq('lote_id', id).order('data_pesagem', { ascending: true }),
-      supabase.from(TABLES.pesagens_lote).select('*').eq('user_id', user?.id).eq('lote_id', id).order('data_pesagem', { ascending: true }),
-      supabase.from(TABLES.baixas).select('*').eq('user_id', user?.id).eq('lote_id', id).order('data_baixa', { ascending: false }),
-    ]);
-
-    if (loteRes.data) setLote(loteRes.data as Lote);
-    if (transRes.data) setTransacoes(transRes.data as Transacao[]);
-    if (cvRes.data) setComprasVendas(cvRes.data as CompraVenda[]);
-    if (pesRes.data) setPesagens(pesRes.data as Pesagem[]);
-    if (pesLoteRes.data) setPesagensLote(pesLoteRes.data as PesagemLote[]);
-    if (baixasRes.data) setBaixas(baixasRes.data as Baixa[]);
-    setLoading(false);
-  }, [id, user]);
+    try {
+      const [loteData, rebanhoData, transData, cvData, eventosData, gmdData, baixasData] =
+        await Promise.all([
+          loteRepo.getLote(id),
+          loteRepo.getRebanho(id),
+          loteRepo.listTransacoesByLote(user.id, id),
+          loteRepo.listComprasVendasByLote(id),
+          loteRepo.listEventosPesagem(user.id, id),
+          loteRepo.listGmdLoteEvento(id),
+          loteRepo.listBaixasByLote(user.id, id),
+        ]);
+      setLote(loteData);
+      setRebanho(rebanhoData);
+      setTransacoes(transData);
+      setComprasVendas(cvData);
+      setEventos(eventosData);
+      setGmdLote(gmdData);
+      setBaixas(baixasData);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro desconhecido';
+      toast({ title: 'Erro ao carregar o lote', description: msg, variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  }, [id, user, toast]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  // ── Baixa Handler ──
+  // Eventos de peso total (a UI de curto prazo). Eventos individuais entram no futuro.
+  const eventosLote = eventos.filter((e) => e.tipo === 'lote_total');
+  // GMD por data, vindo da view (usa o snapshot congelado de cabeças)
+  const gmdByDate = new Map(gmdLote.map((g) => [g.data_pesagem, g.gmd_kg_dia]));
+
+  // ── Baixa ──
   const handleRegistrarBaixa = async () => {
     if (!user || !lote || !baixaQtd || Number(baixaQtd) <= 0) {
       toast({ title: 'Informe a quantidade', variant: 'destructive' });
       return;
     }
-
-    const totalBaixas = baixas.reduce((sum, b) => sum + b.quantidade, 0);
-    const cabecasVivas = lote.qtd_cabecas - lote.qtd_cabecas_vendidas - totalBaixas;
-
     if (Number(baixaQtd) > cabecasVivas) {
       toast({ title: 'Quantidade maior que cabeças vivas', variant: 'destructive' });
       return;
@@ -110,156 +122,63 @@ export default function LoteDetalhe() {
 
     setSavingBaixa(true);
     try {
-      const { error } = await supabase.from(TABLES.baixas).insert({
-        lote_id: lote.id,
-        user_id: user.id,
-        data_baixa: baixaData,
-        quantidade: Number(baixaQtd),
+      await loteRepo.registrarBaixa({
+        loteId: lote.id,
+        qtd: Number(baixaQtd),
+        data: baixaData,
         motivo: baixaMotivo || 'Mortalidade',
       });
-      if (error) throw error;
-
-      // Update qtd_cabecas on the lote (subtract baixa)
-      const newQtd = lote.qtd_cabecas - Number(baixaQtd);
-      const { error: updateErr } = await supabase
-        .from(TABLES.lotes)
-        .update({ qtd_cabecas: newQtd })
-        .eq('id', lote.id);
-      if (updateErr) throw updateErr;
-
       toast({ title: 'Baixa registrada!', description: `${baixaQtd} cabeça(s) - ${baixaMotivo || 'Mortalidade'}` });
       setBaixaQtd('1');
       setBaixaMotivo('');
       setShowBaixaForm(false);
-      fetchData();
+      await fetchData();
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
-      toast({ title: 'Erro ao registrar baixa', description: errorMessage, variant: 'destructive' });
+      const msg = err instanceof Error ? err.message : 'Erro desconhecido';
+      toast({ title: 'Erro ao registrar baixa', description: msg, variant: 'destructive' });
     } finally {
       setSavingBaixa(false);
     }
   };
 
-  // ── Pesagem média Handler (legacy) ──
-  const handleRegistrarPesagem = async () => {
-    if (!user || !lote || !pesagemPeso || Number(pesagemPeso) <= 0) {
-      toast({ title: 'Informe o peso médio', variant: 'destructive' });
-      return;
-    }
-
-    setSavingPesagem(true);
-    try {
-      const pesoAtual = Number(pesagemPeso);
-      let gmd = 0;
-      const lastPesagem = pesagens.length > 0 ? pesagens[pesagens.length - 1] : null;
-
-      if (lastPesagem) {
-        const dias = daysBetween(lastPesagem.data_pesagem, pesagemData);
-        if (dias > 0) gmd = (pesoAtual - Number(lastPesagem.peso_media_kg)) / dias;
-      } else if (Number(lote.peso_entrada_kg) > 0) {
-        const dias = daysBetween(lote.data_entrada, pesagemData);
-        if (dias > 0) gmd = (pesoAtual - Number(lote.peso_entrada_kg)) / dias;
-      }
-
-      const { error } = await supabase.from(TABLES.pesagens).insert({
-        lote_id: lote.id,
-        user_id: user.id,
-        data_pesagem: pesagemData,
-        peso_media_kg: pesoAtual,
-        gmd_calculado: Math.max(0, Number(gmd.toFixed(4))),
-      });
-      if (error) throw error;
-
-      toast({ title: 'Pesagem registrada!', description: `GMD: ${gmd.toFixed(3)} kg/dia` });
-      setPesagemPeso('');
-      setShowPesagemForm(false);
-      fetchData();
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
-      toast({ title: 'Erro ao salvar pesagem', description: errorMessage, variant: 'destructive' });
-    } finally {
-      setSavingPesagem(false);
-    }
-  };
-
-  // ── Pesagem Lote (peso total) Handler ──
+  // ── Pesagem de lote (peso total) ──
   const handleRegistrarPesagemLote = async () => {
     if (!user || !lote || !pesagemLotePesoTotal || Number(pesagemLotePesoTotal) <= 0) {
       toast({ title: 'Informe o peso total', variant: 'destructive' });
       return;
     }
-
     setSavingPesagemLote(true);
     try {
-      const { error } = await supabase.from(TABLES.pesagens_lote).insert({
-        lote_id: lote.id,
-        user_id: user.id,
-        data_pesagem: pesagemLoteData,
-        peso_total_kg: Number(pesagemLotePesoTotal),
+      await loteRepo.registrarPesagemLoteTotal({
+        loteId: lote.id,
+        data: pesagemLoteData,
+        pesoTotalKg: Number(pesagemLotePesoTotal),
       });
-      if (error) throw error;
-
       toast({ title: 'Pesagem do lote registrada!' });
       setPesagemLotePesoTotal('');
       setShowPesagemLoteForm(false);
-      fetchData();
+      await fetchData();
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
-      toast({ title: 'Erro ao salvar pesagem', description: errorMessage, variant: 'destructive' });
+      const msg = err instanceof Error ? err.message : 'Erro desconhecido';
+      toast({ title: 'Erro ao salvar pesagem', description: msg, variant: 'destructive' });
     } finally {
       setSavingPesagemLote(false);
     }
   };
 
-  const handleExcluirPesagemLote = async (pesagemId: string) => {
-    setDeletingPesagemLoteId(pesagemId);
+  const handleExcluirEvento = async (eventoId: string) => {
+    if (!user) return;
+    setDeletingEventoId(eventoId);
     try {
-      const { data, error } = await supabase
-        .from(TABLES.pesagens_lote)
-        .delete()
-        .eq('id', pesagemId)
-        .eq('user_id', user?.id)
-        .select('id');
-
-      if (error) throw error;
-      if (!data || data.length === 0) {
-        throw new Error('A pesagem do lote não foi removida pelo banco. Verifique as permissões da tabela.');
-      }
-
-      setPesagensLote((current) => current.filter((pesagem) => pesagem.id !== pesagemId));
+      await loteRepo.excluirEventoPesagem(user.id, eventoId);
+      setEventos((current) => current.filter((e) => e.id !== eventoId));
       toast({ title: 'Pesagem do lote excluída com sucesso' });
       await fetchData();
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
-      toast({ title: 'Erro ao excluir pesagem do lote', description: errorMessage, variant: 'destructive' });
+      const msg = err instanceof Error ? err.message : 'Erro desconhecido';
+      toast({ title: 'Erro ao excluir pesagem do lote', description: msg, variant: 'destructive' });
     } finally {
-      setDeletingPesagemLoteId(null);
-    }
-  };
-
-  const handleExcluirPesagem = async (pesagemId: string) => {
-    setDeletingPesagemId(pesagemId);
-    try {
-      const { data, error } = await supabase
-        .from(TABLES.pesagens)
-        .delete()
-        .eq('id', pesagemId)
-        .eq('user_id', user?.id)
-        .select('id');
-
-      if (error) throw error;
-      if (!data || data.length === 0) {
-        throw new Error('A pesagem individual não foi removida pelo banco. Verifique as permissões da tabela.');
-      }
-
-      setPesagens((current) => current.filter((pesagem) => pesagem.id !== pesagemId));
-      toast({ title: 'Pesagem excluída com sucesso' });
-      await fetchData();
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
-      toast({ title: 'Erro ao excluir pesagem', description: errorMessage, variant: 'destructive' });
-    } finally {
-      setDeletingPesagemId(null);
+      setDeletingEventoId(null);
     }
   };
 
@@ -279,10 +198,11 @@ export default function LoteDetalhe() {
     );
   }
 
-  // ── DRE Calculations ──
-  const totalBaixas = baixas.reduce((sum, b) => sum + b.quantidade, 0);
-  const cabecasVivas = lote.qtd_cabecas - lote.qtd_cabecas_vendidas;
+  // ── Contagens (fonte de verdade: rebanho derivado do vínculo; fallback: lote) ──
+  const totalBaixas = rebanho?.cabecas_baixa ?? baixas.reduce((sum, b) => sum + b.quantidade, 0);
+  const cabecasVivas = rebanho?.cabecas_vivas ?? (lote.qtd_cabecas - lote.qtd_cabecas_vendidas);
 
+  // ── DRE ──
   const receitasDiretas = transacoes
     .filter((t) => t.tipo === 'RECEITA')
     .reduce((sum, t) => sum + Number(t.valor), 0);
@@ -297,20 +217,16 @@ export default function LoteDetalhe() {
 
   const custoAcumulado = custoCompra + custosOperacionais;
 
-  // Use pesagens_lote for peso atual if available, otherwise fallback to pesagens (peso médio)
+  // Peso atual: última pesagem de lote total, usando o SNAPSHOT congelado de cabeças
   let pesoAtualMedio = 0;
-  if (pesagensLote.length > 0) {
-    const lastPL = pesagensLote[pesagensLote.length - 1];
-    pesoAtualMedio = cabecasVivas > 0 ? Number(lastPL.peso_total_kg) / cabecasVivas : 0;
-  } else if (pesagens.length > 0) {
-    pesoAtualMedio = Number(pesagens[pesagens.length - 1].peso_media_kg);
+  const lastEvento = eventosLote.length > 0 ? eventosLote[eventosLote.length - 1] : null;
+  if (lastEvento && lastEvento.peso_total_kg && lastEvento.qtd_cabecas_pesadas) {
+    pesoAtualMedio = Number(lastEvento.peso_total_kg) / Number(lastEvento.qtd_cabecas_pesadas);
   } else {
     pesoAtualMedio = Number(lote.peso_entrada_kg) || 0;
   }
 
-  // Custo por cabeça viva (absorve custo dos mortos)
   const custoPorCabecaViva = cabecasVivas > 0 ? custoAcumulado / cabecasVivas : 0;
-
   const arrobasRestantes = kgToArrobas(pesoAtualMedio * cabecasVivas);
   const pontoEquilibrio = arrobasRestantes > 0 ? custoAcumulado / arrobasRestantes : 0;
 
@@ -318,36 +234,14 @@ export default function LoteDetalhe() {
   const lucroPorCabeca = lote.qtd_cabecas > 0 ? lucroLiquido / lote.qtd_cabecas : 0;
   const margemLucro = receitasDiretas > 0 ? (lucroLiquido / receitasDiretas) * 100 : 0;
 
-  const lucroProjetado = lote.status === 'ativo' && pontoEquilibrio > 0
-    ? (arrobasRestantes * pontoEquilibrio * 1.15) - custoAcumulado
-    : 0;
+  const lucroProjetado =
+    lote.status === 'ativo' && pontoEquilibrio > 0
+      ? arrobasRestantes * pontoEquilibrio * 1.15 - custoAcumulado
+      : 0;
 
-  // GMD Real from pesagens_lote
-  let gmdRealLote = 0;
-  if (pesagensLote.length >= 2) {
-    const first = pesagensLote[0];
-    const last = pesagensLote[pesagensLote.length - 1];
-    const dias = daysBetween(first.data_pesagem, last.data_pesagem);
-    if (dias > 0 && cabecasVivas > 0) {
-      const pesoMedioFirst = Number(first.peso_total_kg) / (lote.qtd_cabecas - lote.qtd_cabecas_vendidas + totalBaixas);
-      const pesoMedioLast = Number(last.peso_total_kg) / cabecasVivas;
-      gmdRealLote = (pesoMedioLast - pesoMedioFirst) / dias;
-    }
-  } else if (pesagensLote.length === 1 && Number(lote.peso_entrada_kg) > 0) {
-    const last = pesagensLote[0];
-    const dias = daysBetween(lote.data_entrada, last.data_pesagem);
-    if (dias > 0 && cabecasVivas > 0) {
-      const pesoMedioLast = Number(last.peso_total_kg) / cabecasVivas;
-      gmdRealLote = (pesoMedioLast - Number(lote.peso_entrada_kg)) / dias;
-    }
-  }
-
-  // GMD from pesagens (legacy)
-  const gmdAtual = pesagens.length > 0
-    ? Number(pesagens[pesagens.length - 1].gmd_calculado)
-    : 0;
-
-  const gmdDisplay = gmdRealLote > 0 ? gmdRealLote : gmdAtual;
+  // GMD do lote: última entrada com GMD calculado na view
+  const gmdComValor = gmdLote.filter((g) => g.gmd_kg_dia != null);
+  const gmdDisplay = gmdComValor.length > 0 ? Number(gmdComValor[gmdComValor.length - 1].gmd_kg_dia) : 0;
 
   // Compras/Vendas
   const compras = comprasVendas.filter((cv) => {
@@ -364,7 +258,6 @@ export default function LoteDetalhe() {
     (t) => t.tipo === 'DESPESA' && t.categoria !== 'COMPRA_GADO'
   );
 
-  // PDF for compra/venda
   const handleGerarPDFCompraVenda = (cv: CompraVenda) => {
     const trans = transacoes.find((t) => t.id === cv.transacao_id);
     if (!trans) return;
@@ -564,7 +457,7 @@ export default function LoteDetalhe() {
                 <Scale className="w-4 h-4 text-brand" strokeWidth={2.4} />
                 <div>
                   <h3 className="text-sm font-semibold text-ink-900">Pesagens do lote</h3>
-                  <p className="text-xs text-ink-500 mt-0.5">Peso total da arroba</p>
+                  <p className="text-xs text-ink-500 mt-0.5">Peso total · cabeças no dia da pesagem</p>
                 </div>
               </div>
               {lote.status === 'ativo' && (
@@ -600,7 +493,7 @@ export default function LoteDetalhe() {
                 </div>
                 {Number(pesagemLotePesoTotal) > 0 && cabecasVivas > 0 && (
                   <div className="flex items-center justify-between text-xs bg-white rounded-md p-2.5 border border-ink-200">
-                    <span className="text-ink-500">Peso médio por cabeça</span>
+                    <span className="text-ink-500">Peso médio por cabeça ({cabecasVivas} vivas)</span>
                     <span className="font-semibold text-brand tabular-nums">
                       {(Number(pesagemLotePesoTotal) / cabecasVivas).toFixed(1)} kg · {kgToArrobas(Number(pesagemLotePesoTotal) / cabecasVivas).toFixed(2)} @
                     </span>
@@ -631,42 +524,34 @@ export default function LoteDetalhe() {
             </div>
 
             {/* Histórico pesagens lote */}
-            {pesagensLote.length > 0 && (
+            {eventosLote.length > 0 && (
               <ul className="divide-y divide-ink-200">
-                {pesagensLote.map((p, idx) => {
-                  const pesoMedio = cabecasVivas > 0 ? Number(p.peso_total_kg) / cabecasVivas : 0;
-                  let gmdItem = 0;
-                  if (idx > 0) {
-                    const prev = pesagensLote[idx - 1];
-                    const prevPesoMedio = cabecasVivas > 0 ? Number(prev.peso_total_kg) / cabecasVivas : 0;
-                    const dias = daysBetween(prev.data_pesagem, p.data_pesagem);
-                    if (dias > 0) gmdItem = (pesoMedio - prevPesoMedio) / dias;
-                  } else if (Number(lote.peso_entrada_kg) > 0) {
-                    const dias = daysBetween(lote.data_entrada, p.data_pesagem);
-                    if (dias > 0) gmdItem = (pesoMedio - Number(lote.peso_entrada_kg)) / dias;
-                  }
+                {eventosLote.map((e, idx) => {
+                  const qtd = Number(e.qtd_cabecas_pesadas) || 0;
+                  const pesoMedio = qtd > 0 ? Number(e.peso_total_kg) / qtd : 0;
+                  const gmdItem = gmdByDate.get(e.data_pesagem);
                   return (
-                    <li key={p.id} className="px-5 py-2.5 flex items-center gap-3 text-xs">
+                    <li key={e.id} className="px-5 py-2.5 flex items-center gap-3 text-xs">
                       <div className="w-5 h-5 rounded-full bg-brand/10 flex items-center justify-center text-[10px] font-bold text-brand flex-shrink-0">
                         {idx + 1}
                       </div>
-                      <span className="text-ink-500 tabular-nums whitespace-nowrap">{formatDate(p.data_pesagem)}</span>
+                      <span className="text-ink-500 tabular-nums whitespace-nowrap">{formatDate(e.data_pesagem)}</span>
                       <span className="font-medium text-ink-900 tabular-nums flex-1 truncate">
-                        {Number(p.peso_total_kg).toFixed(0)} kg <span className="text-ink-500 font-normal">(méd {pesoMedio.toFixed(0)} kg)</span>
+                        {Number(e.peso_total_kg).toFixed(0)} kg <span className="text-ink-500 font-normal">(méd {pesoMedio.toFixed(0)} kg · {qtd} cab)</span>
                       </span>
-                      {gmdItem > 0 && (
+                      {gmdItem != null && gmdItem > 0 && (
                         <Badge variant="outline" className="rounded-full bg-success-soft border-success/20 text-success text-[10px] px-2 py-0 font-medium tabular-nums">
-                          GMD {gmdItem.toFixed(3)}
+                          GMD {Number(gmdItem).toFixed(3)}
                         </Badge>
                       )}
                       <button
                         type="button"
-                        onClick={() => setPesagemLoteParaExcluir(p.id)}
-                        disabled={deletingPesagemLoteId === p.id}
+                        onClick={() => setEventoParaExcluir(e.id)}
+                        disabled={deletingEventoId === e.id}
                         className="p-1 rounded hover:bg-danger-soft disabled:opacity-50"
                         title="Excluir pesagem do lote"
                       >
-                        {deletingPesagemLoteId === p.id ? (
+                        {deletingEventoId === e.id ? (
                           <Loader2 className="w-3.5 h-3.5 animate-spin text-danger" />
                         ) : (
                           <Trash2 className="w-3.5 h-3.5 text-danger" />
@@ -677,108 +562,10 @@ export default function LoteDetalhe() {
                 })}
               </ul>
             )}
-          </section>
 
-          {/* Pesagens individuais (legacy) */}
-          <section className="rounded-xl border border-ink-200 bg-white">
-            <div className="px-5 py-4 border-b border-ink-200 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Weight className="w-4 h-4 text-brand" strokeWidth={2.4} />
-                <div>
-                  <h3 className="text-sm font-semibold text-ink-900">Pesagens individuais</h3>
-                  <p className="text-xs text-ink-500 mt-0.5">Peso médio direto (legado)</p>
-                </div>
-              </div>
-              {lote.status === 'ativo' && (
-                <Button
-                  size="sm"
-                  onClick={() => setShowPesagemForm(!showPesagemForm)}
-                  variant="outline"
-                  className="h-8 rounded-md text-xs font-medium"
-                >
-                  <Plus className="w-3.5 h-3.5 mr-1" />
-                  Registrar
-                </Button>
-              )}
-            </div>
-
-            {showPesagemForm && (
-              <div className="p-5 border-b border-ink-200 bg-brand/[0.03] space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-[11px] font-semibold text-ink-700 uppercase tracking-wider">Peso médio (kg/cab)</Label>
-                    <Input
-                      type="number" step="0.01" min="0" placeholder="0,00"
-                      value={pesagemPeso} onChange={(e) => setPesagemPeso(e.target.value)}
-                      className="h-9 mt-1 rounded-md border-ink-200 text-sm tabular-nums"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-[11px] font-semibold text-ink-700 uppercase tracking-wider">Data</Label>
-                    <Input
-                      type="date" value={pesagemData} onChange={(e) => setPesagemData(e.target.value)}
-                      className="h-9 mt-1 rounded-md border-ink-200 text-sm"
-                    />
-                  </div>
-                </div>
-                {Number(pesagemPeso) > 0 && (
-                  <div className="flex items-center justify-between text-xs bg-white rounded-md p-2.5 border border-ink-200">
-                    <span className="text-ink-500">Equivalente em @</span>
-                    <span className="font-semibold text-brand tabular-nums">{kgToArrobas(Number(pesagemPeso)).toFixed(2)} @/cab</span>
-                  </div>
-                )}
-                <div className="flex gap-2 pt-1">
-                  <Button
-                    onClick={handleRegistrarPesagem}
-                    disabled={savingPesagem}
-                    size="sm"
-                    className="h-9 rounded-md bg-brand hover:bg-brand-700 text-white text-sm font-medium"
-                  >
-                    {savingPesagem ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <Scale className="w-4 h-4 mr-1.5" />}
-                    Salvar
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => setShowPesagemForm(false)} className="h-9 rounded-md text-sm">
-                    Cancelar
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {pesagens.length > 0 ? (
-              <ul className="divide-y divide-ink-200">
-                {pesagens.map((p, idx) => (
-                  <li key={p.id} className="px-5 py-2.5 flex items-center gap-3 text-xs">
-                    <div className="w-5 h-5 rounded-full bg-brand/10 flex items-center justify-center text-[10px] font-bold text-brand flex-shrink-0">
-                      {idx + 1}
-                    </div>
-                    <span className="text-ink-500 tabular-nums whitespace-nowrap">{formatDate(p.data_pesagem)}</span>
-                    <span className="font-medium text-ink-900 tabular-nums flex-1 truncate">
-                      {Number(p.peso_media_kg).toFixed(1)} kg <span className="text-ink-500 font-normal">({kgToArrobas(Number(p.peso_media_kg)).toFixed(2)} @)</span>
-                    </span>
-                    {Number(p.gmd_calculado) > 0 && (
-                      <Badge variant="outline" className="rounded-full bg-success-soft border-success/20 text-success text-[10px] px-2 py-0 font-medium tabular-nums">
-                        GMD {Number(p.gmd_calculado).toFixed(3)}
-                      </Badge>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => setPesagemParaExcluir(p.id)}
-                      disabled={deletingPesagemId === p.id}
-                      className="p-1 rounded hover:bg-danger-soft disabled:opacity-50"
-                      title="Excluir pesagem individual"
-                    >
-                      {deletingPesagemId === p.id ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin text-danger" />
-                      ) : (
-                        <Trash2 className="w-3.5 h-3.5 text-danger" />
-                      )}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : !showPesagemForm && (
+            {eventosLote.length === 0 && !showPesagemLoteForm && (
               <div className="px-5 py-6 text-center">
-                <p className="text-xs text-ink-400">Nenhuma pesagem individual registrada.</p>
+                <p className="text-xs text-ink-400">Nenhuma pesagem de lote registrada.</p>
               </div>
             )}
           </section>
@@ -1036,35 +823,18 @@ export default function LoteDetalhe() {
       </div>
 
       <ConfirmDialog
-        open={pesagemLoteParaExcluir !== null}
-        onOpenChange={(o) => !o && setPesagemLoteParaExcluir(null)}
+        open={eventoParaExcluir !== null}
+        onOpenChange={(o) => !o && setEventoParaExcluir(null)}
         title="Excluir pesagem do lote"
         description="Esta pesagem (peso total) será removida do histórico. Esta ação não pode ser desfeita."
         confirmLabel="Excluir"
         destructive
-        loading={deletingPesagemLoteId !== null}
+        loading={deletingEventoId !== null}
         onConfirm={async () => {
-          if (pesagemLoteParaExcluir) {
-            const id = pesagemLoteParaExcluir;
-            setPesagemLoteParaExcluir(null);
-            await handleExcluirPesagemLote(id);
-          }
-        }}
-      />
-
-      <ConfirmDialog
-        open={pesagemParaExcluir !== null}
-        onOpenChange={(o) => !o && setPesagemParaExcluir(null)}
-        title="Excluir pesagem individual"
-        description="Esta pesagem (peso médio) será removida do histórico. Esta ação não pode ser desfeita."
-        confirmLabel="Excluir"
-        destructive
-        loading={deletingPesagemId !== null}
-        onConfirm={async () => {
-          if (pesagemParaExcluir) {
-            const id = pesagemParaExcluir;
-            setPesagemParaExcluir(null);
-            await handleExcluirPesagem(id);
+          if (eventoParaExcluir) {
+            const eid = eventoParaExcluir;
+            setEventoParaExcluir(null);
+            await handleExcluirEvento(eid);
           }
         }}
       />

@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { supabase, TABLES, formatBRL, formatDate, kgToArrobas } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Transacao, Lote, Pesagem, PesagemLote, CATEGORIA_LABELS, CategoriaTransacao } from '@/lib/types';
+import { Transacao, Lote, PesagemEvento, LoteRebanho, CATEGORIA_LABELS, CategoriaTransacao } from '@/lib/types';
+import * as loteRepo from '@/lib/repositories/loteRepo';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -55,8 +56,8 @@ export default function Dashboard() {
   const [transacoes, setTransacoes] = useState<Transacao[]>([]);
   const [chartTransacoes, setChartTransacoes] = useState<Transacao[]>([]);
   const [lotes, setLotes] = useState<Lote[]>([]);
-  const [pesagensMap, setPesagensMap] = useState<Record<string, Pesagem[]>>({});
-  const [pesagensLoteMap, setPesagensLoteMap] = useState<Record<string, PesagemLote[]>>({});
+  const [eventosMap, setEventosMap] = useState<Record<string, PesagemEvento[]>>({});
+  const [rebanhoMap, setRebanhoMap] = useState<Record<string, LoteRebanho>>({});
   const [loading, setLoading] = useState(true);
   const [filterCategoria, setFilterCategoria] = useState<string>('ALL');
   const [filterPeriodo, setFilterPeriodo] = useState<string>('mes_atual');
@@ -136,24 +137,26 @@ export default function Dashboard() {
 
     if (activeLotes.length > 0) {
       const loteIds = activeLotes.map((l) => l.id);
-      const [pesRes, pesLoteRes] = await Promise.all([
-        supabase.from(TABLES.pesagens).select('*').in('lote_id', loteIds).order('data_pesagem', { ascending: true }),
-        supabase.from(TABLES.pesagens_lote).select('*').in('lote_id', loteIds).order('data_pesagem', { ascending: true }),
+      const [eventos, rebanhos] = await Promise.all([
+        loteRepo.listEventosPesagemByLotes(user.id, loteIds),
+        loteRepo.getRebanhoByLotes(loteIds),
       ]);
 
-      const pesMap: Record<string, Pesagem[]> = {};
-      ((pesRes.data || []) as Pesagem[]).forEach((p) => {
-        if (!pesMap[p.lote_id]) pesMap[p.lote_id] = [];
-        pesMap[p.lote_id].push(p);
-      });
-      setPesagensMap(pesMap);
+      const evMap: Record<string, PesagemEvento[]> = {};
+      eventos
+        .filter((e) => e.tipo === 'lote_total')
+        .forEach((e) => {
+          if (!evMap[e.lote_id]) evMap[e.lote_id] = [];
+          evMap[e.lote_id].push(e);
+        });
+      setEventosMap(evMap);
 
-      const pesLoteMap: Record<string, PesagemLote[]> = {};
-      ((pesLoteRes.data || []) as PesagemLote[]).forEach((p) => {
-        if (!pesLoteMap[p.lote_id]) pesLoteMap[p.lote_id] = [];
-        pesLoteMap[p.lote_id].push(p);
-      });
-      setPesagensLoteMap(pesLoteMap);
+      const rMap: Record<string, LoteRebanho> = {};
+      rebanhos.forEach((r) => { rMap[r.lote_id] = r; });
+      setRebanhoMap(rMap);
+    } else {
+      setEventosMap({});
+      setRebanhoMap({});
     }
 
     setLoading(false);
@@ -221,23 +224,28 @@ export default function Dashboard() {
   const despesas = transacoes.filter((t) => t.tipo === 'DESPESA').reduce((s, t) => s + Number(t.valor), 0);
   const saldo = receitas - despesas;
 
-  const totalCabecas = lotes.reduce((sum, l) => sum + (l.qtd_cabecas - l.qtd_cabecas_vendidas), 0);
+  // Cabeças vivas: fonte de verdade é o rebanho derivado do vínculo (fallback: lote)
+  const cabVivasDe = (l: Lote): number =>
+    rebanhoMap[l.id]?.cabecas_vivas ?? (l.qtd_cabecas - l.qtd_cabecas_vendidas);
 
+  const totalCabecas = lotes.reduce((sum, l) => sum + cabVivasDe(l), 0);
+
+  // Peso médio por cabeça: última pesagem de lote, usando o snapshot congelado de cabeças
   const pesoMedioLote = (l: Lote): number => {
-    const cabVivas = l.qtd_cabecas - l.qtd_cabecas_vendidas;
-    const plArr = pesagensLoteMap[l.id];
-    if (plArr && plArr.length > 0) {
-      return cabVivas > 0 ? Number(plArr[plArr.length - 1].peso_total_kg) / cabVivas : 0;
+    const evs = eventosMap[l.id];
+    if (evs && evs.length > 0) {
+      const last = evs[evs.length - 1];
+      if (last.peso_total_kg && last.qtd_cabecas_pesadas) {
+        return Number(last.peso_total_kg) / Number(last.qtd_cabecas_pesadas);
+      }
     }
-    const pArr = pesagensMap[l.id];
-    if (pArr && pArr.length > 0) return Number(pArr[pArr.length - 1].peso_media_kg);
     return Number(l.peso_entrada_kg) || 0;
   };
 
-  const totalArrobasEstimadas = lotes.reduce((sum, l) => {
-    const cabVivas = l.qtd_cabecas - l.qtd_cabecas_vendidas;
-    return sum + kgToArrobas(pesoMedioLote(l) * cabVivas);
-  }, 0);
+  const totalArrobasEstimadas = lotes.reduce(
+    (sum, l) => sum + kgToArrobas(pesoMedioLote(l) * cabVivasDe(l)),
+    0
+  );
 
   const valorRebanho = totalArrobasEstimadas * Number(cotacaoArroba);
 
@@ -572,7 +580,7 @@ export default function Dashboard() {
                 ) : (
                   <ul className="divide-y divide-ink-200">
                     {lotes.slice(0, 5).map((l) => {
-                      const cabVivas = l.qtd_cabecas - l.qtd_cabecas_vendidas;
+                      const cabVivas = cabVivasDe(l);
                       const arr = kgToArrobas(pesoMedioLote(l) * cabVivas);
                       const valor = arr * Number(cotacaoArroba);
                       return (
