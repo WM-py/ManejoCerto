@@ -3,12 +3,20 @@ import { Link } from 'react-router-dom';
 import {
   Beef, Scale, Calculator, BarChart3, Paperclip,
   Target, Activity, Check, ArrowRight, Menu, X, ShieldCheck,
-  Smartphone, Wallet, ChevronDown, Users, ClipboardList, Sparkles,
+  Smartphone, Wallet, ChevronDown, ClipboardList, Sparkles, Star,
 } from 'lucide-react';
 import { getMercadoPagoPreferenceUrl, hasMercadoPagoConfigured } from '@/lib/mercadopago';
 
 const WHATSAPP = 'https://wa.me/5585997314537?text=Ol%C3%A1%2C%20gostaria%20de%20saber%20mais%20sobre%20o%20Manejo%20Certo%20e%20como%20come%C3%A7ar.';
 const WHATSAPP_COMERCIAL = 'https://wa.me/5585997314537?text=Ol%C3%A1%2C%20quero%20comprar%20o%20Manejo%20Certo%20e%20receber%20uma%20proposta%20comercial.';
+
+// Capturas reais do sistema (public/screenshots)
+const SHOT = {
+  dashboard: '/screenshots/dashboard.png',
+  relatorios: '/screenshots/relatorios.png',
+  lote: '/screenshots/lote.png',
+  mobile: '/screenshots/dashboard_mobile.png',
+};
 
 const FEATURES = [
   { icon: BarChart3, title: 'DRE por lote', desc: 'Veja o lucro real de cada lote: custo de compra, engorda, despesas e margem — sem planilha.' },
@@ -19,18 +27,49 @@ const FEATURES = [
   { icon: Paperclip, title: 'Notas fiscais anexadas', desc: 'Fotografe a nota e guarde junto do lançamento. Nunca mais perca um comprovante.' },
 ];
 
+// Vitrine com telas reais do produto
+const SHOWCASE = [
+  {
+    tag: 'Lucro por lote',
+    title: 'O DRE de cada lote, sem planilha',
+    desc: 'Custo acumulado, ponto de equilíbrio, GMD e lucro projetado de cada lote. Saiba o valor mínimo da arroba antes de fechar a venda — e nunca mais venda no prejuízo achando que teve lucro.',
+    bullets: ['Ponto de equilíbrio por @', 'Custo que absorve a mortalidade', 'Lucro projetado antes de vender'],
+    img: SHOT.lote,
+    alt: 'Tela de detalhe de um lote com DRE, custo acumulado, ponto de equilíbrio e lucro projetado',
+  },
+  {
+    tag: 'Relatórios',
+    title: 'Relatórios prontos para decidir',
+    desc: 'Filtre por período e categoria, veja as despesas no gráfico de rosca e exporte tudo em PDF ou CSV com um clique. Chega de fechar o mês no caderno.',
+    bullets: ['Filtro por período e categoria', 'Despesas por categoria', 'Exporta em PDF e CSV'],
+    img: SHOT.relatorios,
+    alt: 'Tela de relatórios com filtros, totais e gráfico de despesas por categoria',
+  },
+  {
+    tag: 'Visão geral',
+    title: 'Sua fazenda inteira numa tela',
+    desc: 'Saldo do período, receitas, despesas e o patrimônio vivo avaliado pela cotação da @ — mais o fluxo de caixa dos últimos meses, atualizado a cada lançamento.',
+    bullets: ['Patrimônio vivo em tempo real', 'Fluxo de caixa por mês', 'Lotes ativos num relance'],
+    img: SHOT.dashboard,
+    alt: 'Painel do Manejo Certo mostrando saldo, receitas, despesas e patrimônio vivo da fazenda',
+  },
+];
+
 const TESTIMONIALS = [
   {
     quote: 'Antes do Manejo Certo eu vendia no chute; hoje sei o ponto exato da arroba e já melhorei minha margem em 12%.',
-    name: 'José Almeida, produtor em Quixadá',
+    name: 'José Almeida',
+    role: 'Produtor em Quixadá',
   },
   {
     quote: 'O sistema trouxe clareza para cada lote. O fluxo de caixa ficou fácil de entender e a venda ficou mais segura.',
-    name: 'Mariana Silva, fazenda São Pedro',
+    name: 'Mariana Silva',
+    role: 'Fazenda São Pedro',
   },
   {
     quote: 'Em 7 dias já identifiquei custos ocultos e otimizei a compra de ração. Meu controlador adorou.',
-    name: 'Pedro Costa, pecuária de corte',
+    name: 'Pedro Costa',
+    role: 'Pecuária de corte',
   },
 ];
 
@@ -57,7 +96,7 @@ const FAQ = [
   { q: 'Meus dados ficam seguros?', a: 'Sim. Cada fazenda tem seus dados isolados e protegidos. Ninguém além de você acessa seus lançamentos e comprovantes.' },
   { q: 'Serve para qualquer tamanho de fazenda?', a: 'Sim. Seja com 30 ou 3.000 cabeças, o controle de custo por @, GMD e rentabilidade por lote funciona igual.' },
   { q: 'Como funciona o teste grátis?', a: 'Você usa o sistema completo por 14 dias sem pagar nada e sem cartão. Se gostar, escolhe um plano; se não, é só parar.' },
-  { q: 'Posso exportar meus dados?', a: 'Os recibos de compra e venda saem em PDF. A exportação completa para planilha está no nosso roteiro de melhorias.' },
+  { q: 'Posso exportar meus dados?', a: 'Sim. Os relatórios saem em PDF e CSV, e os recibos de compra e venda em PDF, prontos para o contador ou para o banco.' },
 ];
 
 export default function Landing() {
@@ -81,6 +120,7 @@ export default function Landing() {
           </a>
 
           <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-ink-700">
+            <a href="#produto" className="hover:text-brand transition-colors">O sistema</a>
             <a href="#recursos" className="hover:text-brand transition-colors">Recursos</a>
             <a href="#planos" className="hover:text-brand transition-colors">Planos</a>
             <a href="#duvidas" className="hover:text-brand transition-colors">Dúvidas</a>
@@ -102,6 +142,7 @@ export default function Landing() {
 
         {menuOpen && (
           <div className="md:hidden border-t border-ink-200 bg-white px-4 py-4 space-y-1">
+            <a href="#produto" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-sm font-medium hover:bg-ink-100">O sistema</a>
             <a href="#recursos" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-sm font-medium hover:bg-ink-100">Recursos</a>
             <a href="#planos" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-sm font-medium hover:bg-ink-100">Planos</a>
             <a href="#duvidas" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-md text-sm font-medium hover:bg-ink-100">Dúvidas</a>
@@ -115,9 +156,9 @@ export default function Landing() {
 
       {/* Hero */}
       <section id="topo" className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${heroImage})` }} />
-        <div className="absolute inset-0 bg-gradient-to-b from-brand/[0.06] to-white" />
-        <div className="relative max-w-6xl mx-auto px-4 lg:px-8 pt-16 pb-20 lg:pt-24 lg:pb-28 grid lg:grid-cols-2 gap-12 items-center">
+        <div className="absolute inset-0 bg-cover bg-center opacity-[0.12]" style={{ backgroundImage: `url(${heroImage})` }} />
+        <div className="absolute inset-0 bg-gradient-to-br from-white via-white/95 to-brand/5" />
+        <div className="relative max-w-6xl mx-auto px-4 lg:px-8 pt-14 pb-16 lg:pt-20 lg:pb-24 grid lg:grid-cols-2 gap-12 items-center">
           <div>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 text-brand text-xs font-semibold px-3 py-1 mb-5">
               <ShieldCheck className="w-3.5 h-3.5" /> Gestão financeira para pecuária de corte
@@ -145,46 +186,29 @@ export default function Landing() {
               )}
             </div>
             <p className="mt-4 text-sm text-ink-500 flex items-center gap-1.5">
-              <Check className="w-4 h-4 text-success" /> Sem instalação · sem cartão · acesso em poucos minutos
+              <Check className="w-4 h-4 text-success" /> 14 dias grátis · sem cartão · acesso em poucos minutos
             </p>
           </div>
 
-          {/* Product mock */}
+          {/* Captura real do produto */}
           <div className="relative">
-            <div className="rounded-2xl border border-ink-200 bg-white shadow-xl shadow-ink-900/[0.06] p-5">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-[11px] uppercase tracking-wider text-ink-400 font-semibold">Fazenda Boa Vista</p>
-                  <p className="text-sm font-bold">Visão geral</p>
-                </div>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-success-soft text-success text-[11px] font-semibold px-2.5 py-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-success" /> Ao vivo
-                </span>
-              </div>
-              <div className="grid grid-cols-3 gap-2.5 mb-4">
-                <MockKpi label="Saldo" value="R$ 48,2k" tone="text-success" />
-                <MockKpi label="Cabeças" value="312" tone="text-ink-900" />
-                <MockKpi label="Patrimônio" value="R$ 1,4M" tone="text-brand" />
-              </div>
-              <div className="rounded-lg border border-ink-200 p-3">
-                <p className="text-xs font-semibold text-ink-700 mb-2">Fluxo de caixa</p>
-                <div className="flex items-end gap-2 h-24">
-                  {[40, 65, 45, 80, 55, 95].map((h, i) => (
-                    <div key={i} className="flex-1 flex flex-col justify-end gap-0.5">
-                      <div className="w-full rounded-t bg-success/80" style={{ height: `${h}%` }} />
-                      <div className="w-full rounded-b bg-danger/50" style={{ height: `${h / 3}%` }} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <BrowserFrame src={SHOT.dashboard} alt="Painel do Manejo Certo com saldo, receitas, despesas e patrimônio vivo" eager />
             <div className="absolute -bottom-4 -left-4 hidden sm:flex items-center gap-2 rounded-lg border border-ink-200 bg-white shadow-lg px-3 py-2">
               <div className="w-8 h-8 rounded-md bg-brand/10 flex items-center justify-center">
                 <Target className="w-4 h-4 text-brand" />
               </div>
               <div>
                 <p className="text-[10px] text-ink-500 font-semibold uppercase">Equilíbrio</p>
-                <p className="text-sm font-bold tabular-nums">R$ 168,27/@</p>
+                <p className="text-sm font-bold tabular-nums">R$ 191,33/@</p>
+              </div>
+            </div>
+            <div className="absolute -top-4 -right-3 hidden sm:flex items-center gap-2 rounded-lg border border-ink-200 bg-white shadow-lg px-3 py-2">
+              <div className="w-8 h-8 rounded-md bg-success-soft flex items-center justify-center">
+                <Wallet className="w-4 h-4 text-success" />
+              </div>
+              <div>
+                <p className="text-[10px] text-ink-500 font-semibold uppercase">Patrimônio vivo</p>
+                <p className="text-sm font-bold tabular-nums">R$ 223,1k</p>
               </div>
             </div>
           </div>
@@ -205,32 +229,65 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Benefícios de venda */}
-      <section className="max-w-6xl mx-auto px-4 lg:px-8 py-16 lg:py-20">
-        <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-8 items-start">
-          <div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 text-brand text-xs font-semibold px-3 py-1 mb-4">
-              <ShieldCheck className="w-3.5 h-3.5" /> Mais controle, menos improviso
-            </span>
-            <h2 className="text-3xl font-bold tracking-tight">O sistema que ajuda o produtor a decidir com segurança</h2>
-            <p className="mt-4 text-lg text-ink-600 leading-relaxed">
-              Em vez de depender de planilha solta e memória, você acompanha custo, margem, peso e fluxo de caixa em um só lugar.
-              Isso significa menos dúvida na hora de vender, comprar e organizar a fazenda.
-            </p>
-          </div>
-          <div className="rounded-2xl border border-ink-200 bg-white p-6 shadow-sm">
-            <div className="space-y-4">
-              {[
-                'Veja lucro real por lote antes de fechar qualquer operação.',
-                'Acompanhe custo por arroba, GMD e ponto de equilíbrio sem complicação.',
-                'Organize lançamentos, notas e fluxo de caixa no celular ou no computador.',
-              ].map((item) => (
-                <div key={item} className="flex items-start gap-3 rounded-lg bg-ink-50 p-3">
-                  <Check className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-ink-700 leading-relaxed">{item}</p>
-                </div>
-              ))}
+      {/* Vitrine do produto (telas reais) */}
+      <section id="produto" className="max-w-6xl mx-auto px-4 lg:px-8 py-16 lg:py-24">
+        <div className="text-center max-w-2xl mx-auto mb-14">
+          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-brand">O sistema por dentro</p>
+          <h2 className="text-3xl font-bold tracking-tight mt-3">Telas reais, dados de verdade</h2>
+          <p className="mt-3 text-ink-600 text-lg">Sem enrolação: é isso que você vê ao entrar no Manejo Certo.</p>
+        </div>
+
+        <div className="space-y-16 lg:space-y-24">
+          {SHOWCASE.map((item, i) => (
+            <div key={item.title} className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+              <div className={i % 2 === 1 ? 'lg:order-2' : ''}>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 text-brand text-xs font-semibold px-3 py-1 mb-4">
+                  {item.tag}
+                </span>
+                <h3 className="text-2xl lg:text-3xl font-bold tracking-tight">{item.title}</h3>
+                <p className="mt-4 text-lg text-ink-600 leading-relaxed">{item.desc}</p>
+                <ul className="mt-6 space-y-2.5">
+                  {item.bullets.map((b) => (
+                    <li key={b} className="flex items-start gap-2.5 text-ink-700">
+                      <Check className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
+                      <span>{b}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className={i % 2 === 1 ? 'lg:order-1' : ''}>
+                <BrowserFrame src={item.img} alt={item.alt} />
+              </div>
             </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Mobile — no bolso, no campo */}
+      <section className="bg-ink-900 text-white overflow-hidden">
+        <div className="max-w-6xl mx-auto px-4 lg:px-8 py-16 lg:py-20 grid lg:grid-cols-2 gap-12 items-center">
+          <div>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 text-brand-200 text-xs font-semibold px-3 py-1 mb-4">
+              <Smartphone className="w-3.5 h-3.5" /> Funciona no celular
+            </span>
+            <h2 className="text-3xl font-bold tracking-tight leading-tight">
+              Lance a despesa no curral, veja o lucro no sofá
+            </h2>
+            <p className="mt-4 text-ink-200/90 text-lg leading-relaxed">
+              O Manejo Certo abre no navegador do celular — nada pra instalar. Registre a compra da ração
+              na hora, fotografe a nota e consulte o resultado de qualquer lugar, mesmo longe do escritório.
+            </p>
+            <ul className="mt-6 space-y-2.5">
+              {['Mesmos dados no celular e no computador', 'Foto da nota fiscal junto do lançamento', 'Instale como app na tela inicial (PWA)'].map((t) => (
+                <li key={t} className="flex items-start gap-2.5 text-ink-100">
+                  <Check className="w-5 h-5 text-brand-200 flex-shrink-0 mt-0.5" />
+                  <span>{t}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="flex justify-center">
+            <PhoneFrame src={SHOT.mobile} alt="Manejo Certo aberto no celular mostrando a visão geral da fazenda" />
           </div>
         </div>
       </section>
@@ -243,9 +300,22 @@ export default function Landing() {
         </div>
         <div className="grid gap-5 md:grid-cols-3">
           {TESTIMONIALS.map((item) => (
-            <div key={item.name} className="rounded-3xl border border-ink-200 bg-white p-6 shadow-sm">
-              <p className="text-sm text-ink-600 leading-relaxed">“{item.quote}”</p>
-              <p className="mt-5 text-sm font-semibold text-ink-900">{item.name}</p>
+            <div key={item.name} className="rounded-3xl border border-ink-200 bg-white p-6 shadow-sm flex flex-col">
+              <div className="flex gap-0.5 mb-4">
+                {Array.from({ length: 5 }).map((_, s) => (
+                  <Star key={s} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                ))}
+              </div>
+              <p className="text-sm text-ink-600 leading-relaxed flex-1">“{item.quote}”</p>
+              <div className="mt-5 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-brand/10 text-brand flex items-center justify-center text-sm font-bold">
+                  {item.name.split(' ').map((n) => n[0]).slice(0, 2).join('')}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-ink-900">{item.name}</p>
+                  <p className="text-xs text-ink-500">{item.role}</p>
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -259,8 +329,9 @@ export default function Landing() {
             <h2 className="text-3xl font-bold tracking-tight mt-3">Comece em 3 passos simples</h2>
           </div>
           <div className="grid gap-5 md:grid-cols-3">
-            {ONBOARDING_STEPS.map((step) => (
-              <div key={step.title} className="rounded-3xl border border-ink-200 bg-white p-6">
+            {ONBOARDING_STEPS.map((step, i) => (
+              <div key={step.title} className="relative rounded-3xl border border-ink-200 bg-white p-6">
+                <span className="absolute top-6 right-6 text-3xl font-extrabold text-ink-100">{i + 1}</span>
                 <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-brand/10 text-brand mb-4">
                   <step.icon className="w-5 h-5" />
                 </div>
@@ -291,140 +362,108 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Destaque */}
-      <section className="bg-ink-900 text-white">
-        <div className="max-w-6xl mx-auto px-4 lg:px-8 py-16 lg:py-20 grid lg:grid-cols-2 gap-10 items-center">
-          <div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 text-brand-200 text-xs font-semibold px-3 py-1 mb-4">
-              <Scale className="w-3.5 h-3.5" /> Decisão com número, não no achismo
-            </span>
-            <h2 className="text-3xl font-bold tracking-tight leading-tight">
-              O Raio-X da sua fazenda em tempo real
-            </h2>
-            <p className="mt-4 text-ink-200/90 text-lg leading-relaxed">
-              Quantas cabeças, quantas arrobas e quanto vale seu rebanho hoje — atualizado pela cotação da @.
-              Some a isso o DRE de cada lote e você vende na hora certa, pelo preço certo.
-            </p>
-            <ul className="mt-6 space-y-2.5">
-              {['Patrimônio vivo avaliado pela cotação atual', 'Lucro projetado por lote antes de encerrar', 'Custo que absorve a mortalidade automaticamente'].map((t) => (
-                <li key={t} className="flex items-start gap-2.5 text-ink-100">
-                  <Check className="w-5 h-5 text-brand-200 flex-shrink-0 mt-0.5" />
-                  <span>{t}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <MockDark icon={Beef} label="Cabeças em pasto" value="312" />
-            <MockDark icon={Scale} label="@ estimadas" value="4.180" />
-            <MockDark icon={Wallet} label="Valor do rebanho" value="R$ 1,4M" accent />
-            <MockDark icon={Activity} label="GMD médio" value="0,92 kg/d" />
-          </div>
-        </div>
-      </section>
-
       {/* Planos */}
-      <section id="planos" className="max-w-6xl mx-auto px-4 lg:px-8 py-16 lg:py-20">
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <h2 className="text-3xl font-bold tracking-tight">Planos que cabem no bolso do produtor</h2>
-          <p className="mt-3 text-ink-600 text-lg">
-            Comece grátis por 14 dias. Uma negociação de @ melhor já paga o ano inteiro.
+      <section id="planos" className="bg-ink-50 border-y border-ink-200">
+        <div className="max-w-6xl mx-auto px-4 lg:px-8 py-16 lg:py-20">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <h2 className="text-3xl font-bold tracking-tight">Planos que cabem no bolso do produtor</h2>
+            <p className="mt-3 text-ink-600 text-lg">
+              Comece grátis por 14 dias. Uma negociação de @ melhor já paga o ano inteiro.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            {/* Anual */}
+            <div className="relative rounded-2xl border-2 border-brand bg-white p-7 flex flex-col shadow-lg shadow-brand/10">
+              <span className="absolute -top-3 left-4 rounded-full bg-brand text-white text-xs font-semibold px-3 py-1 uppercase tracking-[0.18em]">
+                Mais popular
+              </span>
+              <p className="text-sm font-semibold text-brand uppercase tracking-wider">Anual</p>
+              <div className="mt-3 flex items-baseline gap-1">
+                <span className="text-4xl font-extrabold tracking-tight text-ink-900">R$ 497</span>
+                <span className="text-ink-600 font-medium">/ano</span>
+              </div>
+              <p className="mt-1 text-sm text-ink-600">menos de R$ 42 por mês</p>
+              <ul className="mt-6 space-y-2.5 flex-1">
+                {['Todos os recursos liberados', 'Lotes e lançamentos ilimitados', 'Anexo de notas fiscais', 'Atualizações incluídas', 'Suporte por WhatsApp'].map((t) => (
+                  <PlanItem key={t} text={t} />
+                ))}
+              </ul>
+              {useMercadoPago && mpAnnualUrl ? (
+                <a href={mpAnnualUrl} target="_blank" rel="noopener noreferrer" className="mt-7 h-11 rounded-md bg-ink-900 text-white hover:bg-ink-800 font-semibold text-sm flex items-center justify-center transition-colors">
+                  Pagar anual agora
+                </a>
+              ) : (
+                <a href={WHATSAPP} target="_blank" rel="noopener noreferrer" className="mt-7 h-11 rounded-md bg-ink-900 text-white hover:bg-ink-800 font-semibold text-sm flex items-center justify-center transition-colors">
+                  Falar no WhatsApp
+                </a>
+              )}
+            </div>
+
+            {/* Vitalício */}
+            <div className="rounded-2xl border border-ink-200 bg-white p-7 flex flex-col">
+              <p className="text-sm font-semibold text-brand uppercase tracking-wider">Vitalício</p>
+              <div className="mt-3 flex items-baseline gap-1">
+                <span className="text-4xl font-extrabold tracking-tight">R$ 997</span>
+                <span className="text-ink-500 font-medium">uma vez</span>
+              </div>
+              <p className="mt-1 text-sm text-ink-500">pague uma vez, use para sempre</p>
+              <ul className="mt-6 space-y-2.5 flex-1">
+                {['Tudo do plano anual', 'Acesso vitalício, sem renovar', 'Preço de lançamento congelado', 'Prioridade em novos recursos', 'Suporte por WhatsApp'].map((t) => (
+                  <PlanItem key={t} text={t} />
+                ))}
+              </ul>
+              {useMercadoPago && mpLifetimeUrl ? (
+                <a href={mpLifetimeUrl} target="_blank" rel="noopener noreferrer" className="mt-7 h-11 rounded-md bg-brand text-white hover:bg-brand-700 font-semibold text-sm flex items-center justify-center transition-colors">
+                  Pagar vitalício agora
+                </a>
+              ) : (
+                <Link to="/login?novo=1" className="mt-7 h-11 rounded-md border border-brand text-brand hover:bg-brand/5 font-semibold text-sm flex items-center justify-center transition-colors">
+                  Garantir acesso vitalício
+                </Link>
+              )}
+            </div>
+          </div>
+          <p className="text-center text-xs text-ink-500 mt-6 flex items-center justify-center gap-1.5">
+            <Smartphone className="w-3.5 h-3.5" /> Funciona no celular e no computador · seus dados protegidos
           </p>
         </div>
-
-        <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-          {/* Anual */}
-          <div className="relative rounded-2xl border-2 border-brand bg-brand-50 p-7 flex flex-col shadow-lg shadow-brand/10">
-            <span className="absolute -top-3 left-4 rounded-full bg-brand text-white text-xs font-semibold px-3 py-1 uppercase tracking-[0.18em]">
-              Mais popular
-            </span>
-            <p className="text-sm font-semibold text-brand uppercase tracking-wider">Anual</p>
-            <div className="mt-3 flex items-baseline gap-1">
-              <span className="text-4xl font-extrabold tracking-tight text-ink-900">R$ 497</span>
-              <span className="text-ink-600 font-medium">/ano</span>
-            </div>
-            <p className="mt-1 text-sm text-ink-600">menos de R$ 42 por mês</p>
-            <ul className="mt-6 space-y-2.5 flex-1">
-              {['Todos os recursos liberados', 'Lotes e lançamentos ilimitados', 'Anexo de notas fiscais', 'Atualizações incluídas', 'Suporte por WhatsApp'].map((t) => (
-                <PlanItem key={t} text={t} />
-              ))}
-            </ul>
-            {useMercadoPago && mpAnnualUrl ? (
-              <a href={mpAnnualUrl} target="_blank" rel="noopener noreferrer" className="mt-7 h-11 rounded-md bg-ink-900 text-white hover:bg-ink-800 font-semibold text-sm flex items-center justify-center transition-colors">
-                Pagar anual agora
-              </a>
-            ) : (
-              <a href={WHATSAPP} target="_blank" rel="noopener noreferrer" className="mt-7 h-11 rounded-md bg-ink-900 text-white hover:bg-ink-800 font-semibold text-sm flex items-center justify-center transition-colors">
-                Falar no WhatsApp
-              </a>
-            )}
-          </div>
-
-          {/* Vitalício */}
-          <div className="rounded-2xl border border-ink-200 bg-white p-7 flex flex-col">
-            <p className="text-sm font-semibold text-brand uppercase tracking-wider">Vitalício</p>
-            <div className="mt-3 flex items-baseline gap-1">
-              <span className="text-4xl font-extrabold tracking-tight">R$ 997</span>
-              <span className="text-ink-500 font-medium">uma vez</span>
-            </div>
-            <p className="mt-1 text-sm text-ink-500">pague uma vez, use para sempre</p>
-            <ul className="mt-6 space-y-2.5 flex-1">
-              {['Tudo do plano anual', 'Acesso vitalício, sem renovar', 'Preço de lançamento congelado', 'Prioridade em novos recursos', 'Suporte por WhatsApp'].map((t) => (
-                <PlanItem key={t} text={t} />
-              ))}
-            </ul>
-            {useMercadoPago && mpLifetimeUrl ? (
-              <a href={mpLifetimeUrl} target="_blank" rel="noopener noreferrer" className="mt-7 h-11 rounded-md bg-brand text-white hover:bg-brand-700 font-semibold text-sm flex items-center justify-center transition-colors">
-                Pagar vitalício agora
-              </a>
-            ) : (
-              <Link to="/login?novo=1" className="mt-7 h-11 rounded-md border border-brand text-brand hover:bg-brand/5 font-semibold text-sm flex items-center justify-center transition-colors">
-                Garantir acesso vitalício
-              </Link>
-            )}
-          </div>
-        </div>
-        <p className="text-center text-xs text-ink-500 mt-6 flex items-center justify-center gap-1.5">
-          <Smartphone className="w-3.5 h-3.5" /> Funciona no celular e no computador · seus dados protegidos
-        </p>
       </section>
 
       {/* Como contratar */}
-      <section className="bg-ink-50">
-        <div className="max-w-6xl mx-auto px-4 lg:px-8 py-16 lg:py-20">
-          <div className="text-center max-w-2xl mx-auto mb-10">
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-brand">Venda e implantação</p>
-            <h2 className="text-3xl font-bold tracking-tight mt-3">O caminho mais rápido para começar a usar</h2>
-            <p className="mt-4 text-ink-600 text-lg leading-relaxed">
-              Se estiver pronto para comprar, nosso time comercial envia proposta pelo WhatsApp e ajuda você a entrar no sistema no mesmo dia.
-            </p>
-          </div>
-          <div className="grid gap-5 md:grid-cols-3">
-            {[
-              { title: 'Clique no WhatsApp', desc: 'Abra uma conversa e fale com nosso time comercial.', icon: ClipboardList },
-              { title: 'Receba a proposta', desc: 'Condições e plano em menos de 10 minutos.', icon: Calculator },
-              { title: 'Comece a usar', desc: 'Ativamos seu acesso e você já entra no painel.', icon: Sparkles },
-            ].map((step) => (
-              <div key={step.title} className="rounded-3xl border border-ink-200 bg-white p-6 text-center">
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-brand/10 text-brand mb-4 mx-auto">
-                  <step.icon className="w-5 h-5" />
-                </div>
-                <h3 className="text-lg font-semibold text-ink-900">{step.title}</h3>
-                <p className="mt-3 text-sm text-ink-600 leading-relaxed">{step.desc}</p>
+      <section className="max-w-6xl mx-auto px-4 lg:px-8 py-16 lg:py-20">
+        <div className="text-center max-w-2xl mx-auto mb-10">
+          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-brand">Venda e implantação</p>
+          <h2 className="text-3xl font-bold tracking-tight mt-3">O caminho mais rápido para começar a usar</h2>
+          <p className="mt-4 text-ink-600 text-lg leading-relaxed">
+            Se estiver pronto para comprar, nosso time comercial envia proposta pelo WhatsApp e ajuda você a entrar no sistema no mesmo dia.
+          </p>
+        </div>
+        <div className="grid gap-5 md:grid-cols-3">
+          {[
+            { title: 'Clique no WhatsApp', desc: 'Abra uma conversa e fale com nosso time comercial.', icon: ClipboardList },
+            { title: 'Receba a proposta', desc: 'Condições e plano em menos de 10 minutos.', icon: Calculator },
+            { title: 'Comece a usar', desc: 'Ativamos seu acesso e você já entra no painel.', icon: Sparkles },
+          ].map((step) => (
+            <div key={step.title} className="rounded-3xl border border-ink-200 bg-white p-6 text-center">
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-brand/10 text-brand mb-4 mx-auto">
+                <step.icon className="w-5 h-5" />
               </div>
-            ))}
-          </div>
-          <div className="mt-10 text-center">
-            {useMercadoPago && mpAnnualUrl ? (
-              <a href={mpAnnualUrl} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 px-8 rounded-md bg-brand text-white hover:bg-brand-700 font-semibold items-center justify-center transition-colors">
-                Comprar anual agora
-              </a>
-            ) : (
-              <a href={WHATSAPP_COMERCIAL} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 px-8 rounded-md bg-brand text-white hover:bg-brand-700 font-semibold items-center justify-center transition-colors">
-                Falar com comercial agora
-              </a>
-            )}
-          </div>
+              <h3 className="text-lg font-semibold text-ink-900">{step.title}</h3>
+              <p className="mt-3 text-sm text-ink-600 leading-relaxed">{step.desc}</p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-10 text-center">
+          {useMercadoPago && mpAnnualUrl ? (
+            <a href={mpAnnualUrl} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 px-8 rounded-md bg-brand text-white hover:bg-brand-700 font-semibold items-center justify-center transition-colors">
+              Comprar anual agora
+            </a>
+          ) : (
+            <a href={WHATSAPP_COMERCIAL} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 px-8 rounded-md bg-brand text-white hover:bg-brand-700 font-semibold items-center justify-center transition-colors">
+              Falar com comercial agora
+            </a>
+          )}
         </div>
       </section>
 
@@ -491,21 +530,28 @@ export default function Landing() {
   );
 }
 
-function MockKpi({ label, value, tone }: { label: string; value: string; tone: string }) {
+function BrowserFrame({ src, alt, eager, className = '' }: { src: string; alt: string; eager?: boolean; className?: string }) {
   return (
-    <div className="rounded-lg border border-ink-200 p-2.5">
-      <p className="text-[9px] uppercase tracking-wider text-ink-400 font-semibold">{label}</p>
-      <p className={`text-sm font-bold tabular-nums ${tone}`}>{value}</p>
+    <div className={`rounded-xl border border-ink-200 bg-white shadow-2xl shadow-ink-900/10 overflow-hidden ${className}`}>
+      <div className="flex items-center gap-1.5 px-3.5 h-9 bg-ink-50 border-b border-ink-200">
+        <span className="w-2.5 h-2.5 rounded-full bg-danger/50" />
+        <span className="w-2.5 h-2.5 rounded-full bg-amber-400/70" />
+        <span className="w-2.5 h-2.5 rounded-full bg-success/60" />
+        <div className="ml-3 hidden sm:flex flex-1 max-w-[240px] h-5 items-center rounded bg-white border border-ink-200 px-2">
+          <span className="text-[10px] text-ink-400 truncate">app.manejocerto.com.br</span>
+        </div>
+      </div>
+      <img src={src} alt={alt} loading={eager ? 'eager' : 'lazy'} className="w-full block" />
     </div>
   );
 }
 
-function MockDark({ icon: Icon, label, value, accent }: { icon: React.ElementType; label: string; value: string; accent?: boolean }) {
+function PhoneFrame({ src, alt }: { src: string; alt: string }) {
   return (
-    <div className="rounded-xl bg-white/[0.06] border border-white/10 p-4">
-      <Icon className={`w-5 h-5 mb-2 ${accent ? 'text-brand-200' : 'text-ink-300'}`} />
-      <p className="text-[10px] uppercase tracking-wider text-ink-400 font-semibold">{label}</p>
-      <p className={`text-lg font-bold tabular-nums ${accent ? 'text-brand-200' : 'text-white'}`}>{value}</p>
+    <div className="relative w-[260px] rounded-[2.5rem] border-[10px] border-ink-900 bg-ink-900 shadow-2xl">
+      <div className="overflow-hidden rounded-[1.9rem] bg-white">
+        <img src={src} alt={alt} loading="lazy" className="w-full block" />
+      </div>
     </div>
   );
 }
