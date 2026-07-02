@@ -127,6 +127,17 @@ export function createMockClient() {
 
   return {
     from: (table: string) => new MockQuery(db, table),
+    // RPC simulada: cobre as funções chamadas pelo app (ex.: mc_is_admin no menu).
+    rpc: async (fn: string) => {
+      switch (fn) {
+        case 'mc_is_admin':
+          return { data: true, error: null };
+        case 'mc_has_active_access':
+          return { data: true, error: null };
+        default:
+          return { data: null, error: null };
+      }
+    },
     storage: {
       from: () => ({
         upload: async (path: string) => ({ data: { path }, error: null }),
