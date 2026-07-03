@@ -10,8 +10,9 @@
  *   • Leituras retornam o dado (ou [] / null); erro vira exceção.
  *   • Escritas retornam void/id; erro vira exceção.
  */
-import { supabase, TABLES, VIEWS, RPC } from '@/lib/supabase';
+import { supabase, TABLES, VIEWS } from '@/lib/supabase';
 import { readThrough } from '@/lib/cache/readThrough';
+import { enqueue } from '@/lib/sync/engine';
 import type {
   Lote,
   Pasto,
@@ -217,89 +218,109 @@ export async function listBaixasByLote(userId: string, loteId: string): Promise<
   );
 }
 
-// ── Escritas (via RPC — garantem integridade + snapshot no servidor) ──────────
+// ── Escritas (via fila de sync — funcionam offline e drenam ao reconectar) ────
+//
+// As páginas chamam estas funções normalmente. Online, a escrita vai ao servidor
+// na hora (erro de negócio é propagado); offline, é enfileirada + projetada no
+// cache e sincronizada quando a rede voltar. Ver src/lib/sync/engine.ts.
 
 /**
- * Cria o lote e gera N animais automaticamente. Retorna o lote_id.
- * `pesoEntradaKg` é o PESO MÉDIO POR CABEÇA (mesma semântica de lotes.peso_entrada_kg).
+ * Registra uma COMPRA: cria o lote (+N animais) e grava a transação/compra.
+ * Sequência transacional reexecutada no servidor por src/lib/sync/handlers.ts.
  */
-export async function criarLoteComAnimais(input: {
+export async function registrarCompra(input: {
+  userId: string;
   nomeLote: string;
   qtdCabecas: number;
+  pesoTotalKg: number;
   pesoEntradaKg: number;
+  valorTotal: number;
+  valorPorArroba: number;
   dataEntrada: string;
   pastoId?: string | null;
   sexo?: string;
   categoria?: string | null;
-}): Promise<string> {
-  const { data, error } = await supabase.rpc(RPC.criarLoteComAnimais, {
-    p_nome_lote: input.nomeLote,
-    p_qtd_cabecas: input.qtdCabecas,
-    p_peso_entrada_kg: input.pesoEntradaKg,
-    p_data_entrada: input.dataEntrada,
-    p_pasto_id: input.pastoId ?? null,
-    p_sexo: input.sexo ?? 'Misto',
-    p_categoria: input.categoria ?? null,
+  descricao: string;
+}): Promise<void> {
+  await enqueue('COMPRA', {
+    userId: input.userId,
+    tempLoteId: crypto.randomUUID(),
+    nomeLote: input.nomeLote,
+    qtdCabecas: input.qtdCabecas,
+    pesoTotalKg: input.pesoTotalKg,
+    pesoEntradaKg: input.pesoEntradaKg,
+    valorTotal: input.valorTotal,
+    valorPorArroba: input.valorPorArroba,
+    dataEntrada: input.dataEntrada,
+    pastoId: input.pastoId ?? null,
+    sexo: input.sexo ?? 'Misto',
+    categoria: input.categoria ?? null,
+    descricao: input.descricao,
   });
-  if (error) throw new Error(error.message);
-  return data as string;
+}
+
+/**
+ * Registra uma VENDA: grava a transação/venda e fecha N vínculos (saída) no lote.
+ */
+export async function registrarVenda(input: {
+  userId: string;
+  loteId: string;
+  qtdCabecas: number;
+  pesoTotalKg: number;
+  valorTotal: number;
+  valorPorArroba: number;
+  data: string;
+  descricao: string;
+}): Promise<void> {
+  await enqueue('VENDA', {
+    userId: input.userId,
+    loteId: input.loteId,
+    qtdCabecas: input.qtdCabecas,
+    pesoTotalKg: input.pesoTotalKg,
+    valorTotal: input.valorTotal,
+    valorPorArroba: input.valorPorArroba,
+    data: input.data,
+    descricao: input.descricao,
+  });
 }
 
 /** Registra pesagem de lote total. O snapshot de cabeças é calculado no servidor. */
 export async function registrarPesagemLoteTotal(input: {
+  userId: string;
   loteId: string;
   data: string;
   pesoTotalKg: number;
   observacao?: string | null;
-}): Promise<string> {
-  const { data, error } = await supabase.rpc(RPC.registrarPesagemLoteTotal, {
-    p_lote_id: input.loteId,
-    p_data: input.data,
-    p_peso_total_kg: input.pesoTotalKg,
-    p_observacao: input.observacao ?? null,
+}): Promise<void> {
+  await enqueue('PESAGEM_LOTE', {
+    userId: input.userId,
+    loteId: input.loteId,
+    data: input.data,
+    pesoTotalKg: input.pesoTotalKg,
+    observacao: input.observacao ?? null,
   });
-  if (error) throw new Error(error.message);
-  return data as string;
 }
 
 /** Registra baixa (mortalidade): fecha N vínculos e mantém os contadores coerentes. */
 export async function registrarBaixa(input: {
+  userId: string;
   loteId: string;
   qtd: number;
   data: string;
   motivo?: string;
 }): Promise<void> {
-  const { error } = await supabase.rpc(RPC.registrarBaixa, {
-    p_lote_id: input.loteId,
-    p_qtd: input.qtd,
-    p_data: input.data,
-    p_motivo: input.motivo ?? 'Mortalidade',
+  await enqueue('BAIXA', {
+    userId: input.userId,
+    loteId: input.loteId,
+    qtd: input.qtd,
+    data: input.data,
+    motivo: input.motivo ?? 'Mortalidade',
   });
-  if (error) throw new Error(error.message);
-}
-
-/**
- * Registra a saída por venda: fecha N vínculos (motivo='venda'), marca os animais
- * como 'vendido' e incrementa o cache qtd_cabecas_vendidas.
- * A transação financeira + compras_vendas são gravadas separadamente pela UI.
- */
-export async function registrarVendaSaida(input: {
-  loteId: string;
-  qtd: number;
-  data: string;
-}): Promise<void> {
-  const { error } = await supabase.rpc(RPC.registrarVendaSaida, {
-    p_lote_id: input.loteId,
-    p_qtd: input.qtd,
-    p_data: input.data,
-  });
-  if (error) throw new Error(error.message);
 }
 
 /** Exclui o lote em cascata (novo modelo + legado) de forma transacional no servidor. */
-export async function excluirLote(loteId: string): Promise<void> {
-  const { error } = await supabase.rpc(RPC.excluirLote, { p_lote_id: loteId });
-  if (error) throw new Error(error.message);
+export async function excluirLote(loteId: string, userId: string): Promise<void> {
+  await enqueue('EXCLUIR_LOTE', { userId, loteId });
 }
 
 /** Soft-delete de um evento de pesagem (sync-friendly: marca deleted_at). */

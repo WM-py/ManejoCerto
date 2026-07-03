@@ -113,9 +113,12 @@ export default function Lotes() {
       }
 
       // Exclusão em cascata (animais/vínculos/pesagens/financeiro + legado) no servidor
-      await loteRepo.excluirLote(loteId);
+      await loteRepo.excluirLote(loteId, user.id);
 
-      toast({ title: 'Lote excluído com sucesso' });
+      toast({
+        title: navigator.onLine ? 'Lote excluído com sucesso' : 'Exclusão registrada (offline)',
+        description: navigator.onLine ? undefined : 'Será sincronizada quando a conexão voltar.',
+      });
       await fetchLotes();
     } catch (error: unknown) {
       const errorMessage = getErrorMessage(error);
