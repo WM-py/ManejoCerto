@@ -56,16 +56,18 @@ export default function CompraVenda() {
   }, [searchParams]);
 
   useEffect(() => {
+    if (!user) return;
     const fetchData = async () => {
-      const [lotesRes, pastosRes] = await Promise.all([
-        supabase.from(TABLES.lotes).select('*').eq('status', 'ativo').order('nome_lote'),
-        supabase.from(TABLES.pastos).select('*').order('nome_pasto'),
+      const [lotesData, pastosData] = await Promise.all([
+        loteRepo.listLotesByStatus(user.id, 'ativo'),
+        loteRepo.listPastos(user.id),
       ]);
-      if (lotesRes.data) setLotes(lotesRes.data as Lote[]);
-      if (pastosRes.data) setPastos(pastosRes.data as Pasto[]);
+      // Ordena por nome no seletor (o repo devolve por data de entrada).
+      setLotes([...lotesData].sort((a, b) => a.nome_lote.localeCompare(b.nome_lote)));
+      setPastos(pastosData);
     };
     fetchData();
-  }, []);
+  }, [user]);
 
   const calcularCategoria = (sexoParam: string, pesoTotal: number, qtd: number): string => {
     const pesoMedio = qtd > 0 ? pesoTotal / qtd : 0;

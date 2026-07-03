@@ -11,8 +11,10 @@
  *   • Escritas retornam void/id; erro vira exceção.
  */
 import { supabase, TABLES, VIEWS, RPC } from '@/lib/supabase';
+import { readThrough } from '@/lib/cache/readThrough';
 import type {
   Lote,
+  Pasto,
   Transacao,
   CompraVenda,
   Baixa,
@@ -26,38 +28,96 @@ function unwrap<T>(res: { data: T | null; error: { message: string } | null }): 
   return res.data as T;
 }
 
-// ── Leituras ────────────────────────────────────────────────────────────────
+/** Chave de cache estável para leituras de conjunto (independe da ordem dos ids). */
+function loteIdsKey(loteIds: string[]): string {
+  return [...loteIds].sort().join(',');
+}
+
+// ── Leituras (cache-first: servem do IndexedDB quando offline) ────────────────
 
 export async function getLote(id: string): Promise<Lote | null> {
-  const { data, error } = await supabase.from(TABLES.lotes).select('*').eq('id', id).single();
-  if (error) {
-    // single() sem linha retorna PGRST116 — tratamos como "não encontrado"
-    if ((error as { code?: string }).code === 'PGRST116') return null;
-    throw new Error(error.message);
-  }
-  return data as Lote;
+  return readThrough<Lote | null>(
+    `lote:${id}`,
+    async () => {
+      const { data, error } = await supabase.from(TABLES.lotes).select('*').eq('id', id).single();
+      if (error) {
+        // single() sem linha retorna PGRST116 — tratamos como "não encontrado"
+        if ((error as { code?: string }).code === 'PGRST116') return null;
+        throw new Error(error.message);
+      }
+      return data as Lote;
+    },
+    null
+  );
+}
+
+/** Lista os lotes do usuário por status (ativo/encerrado). */
+export async function listLotesByStatus(
+  userId: string,
+  status: 'ativo' | 'encerrado'
+): Promise<Lote[]> {
+  return readThrough<Lote[]>(
+    `lotes:${userId}:${status}`,
+    async () =>
+      unwrap<Lote[]>(
+        await supabase
+          .from(TABLES.lotes)
+          .select('*')
+          .eq('user_id', userId)
+          .eq('status', status)
+          .order('data_entrada', { ascending: false })
+      ) ?? [],
+    []
+  );
+}
+
+/** Lista os pastos do usuário. */
+export async function listPastos(userId: string): Promise<Pasto[]> {
+  return readThrough<Pasto[]>(
+    `pastos:${userId}`,
+    async () =>
+      unwrap<Pasto[]>(
+        await supabase
+          .from(TABLES.pastos)
+          .select('*')
+          .eq('user_id', userId)
+          .order('nome_pasto')
+      ) ?? [],
+    []
+  );
 }
 
 export async function getRebanho(loteId: string): Promise<LoteRebanho | null> {
-  const { data, error } = await supabase
-    .from(VIEWS.lote_rebanho)
-    .select('*')
-    .eq('lote_id', loteId)
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  return (data as LoteRebanho) ?? null;
+  return readThrough<LoteRebanho | null>(
+    `rebanho:${loteId}`,
+    async () => {
+      const { data, error } = await supabase
+        .from(VIEWS.lote_rebanho)
+        .select('*')
+        .eq('lote_id', loteId)
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      return (data as LoteRebanho) ?? null;
+    },
+    null
+  );
 }
 
 export async function listEventosPesagem(userId: string, loteId: string): Promise<PesagemEvento[]> {
-  return unwrap<PesagemEvento[]>(
-    await supabase
-      .from(TABLES.pesagem_eventos)
-      .select('*')
-      .eq('user_id', userId)
-      .eq('lote_id', loteId)
-      .is('deleted_at', null)
-      .order('data_pesagem', { ascending: true })
-  ) ?? [];
+  return readThrough<PesagemEvento[]>(
+    `pesagem_eventos:${userId}:${loteId}`,
+    async () =>
+      unwrap<PesagemEvento[]>(
+        await supabase
+          .from(TABLES.pesagem_eventos)
+          .select('*')
+          .eq('user_id', userId)
+          .eq('lote_id', loteId)
+          .is('deleted_at', null)
+          .order('data_pesagem', { ascending: true })
+      ) ?? [],
+    []
+  );
 }
 
 /** Batch: eventos de pesagem de vários lotes (usado no Dashboard). */
@@ -66,65 +126,95 @@ export async function listEventosPesagemByLotes(
   loteIds: string[]
 ): Promise<PesagemEvento[]> {
   if (loteIds.length === 0) return [];
-  return unwrap<PesagemEvento[]>(
-    await supabase
-      .from(TABLES.pesagem_eventos)
-      .select('*')
-      .eq('user_id', userId)
-      .in('lote_id', loteIds)
-      .is('deleted_at', null)
-      .order('data_pesagem', { ascending: true })
-  ) ?? [];
+  return readThrough<PesagemEvento[]>(
+    `pesagem_eventos_multi:${userId}:${loteIdsKey(loteIds)}`,
+    async () =>
+      unwrap<PesagemEvento[]>(
+        await supabase
+          .from(TABLES.pesagem_eventos)
+          .select('*')
+          .eq('user_id', userId)
+          .in('lote_id', loteIds)
+          .is('deleted_at', null)
+          .order('data_pesagem', { ascending: true })
+      ) ?? [],
+    []
+  );
 }
 
 /** Batch: rebanho (contagens) de vários lotes. */
 export async function getRebanhoByLotes(loteIds: string[]): Promise<LoteRebanho[]> {
   if (loteIds.length === 0) return [];
-  return unwrap<LoteRebanho[]>(
-    await supabase.from(VIEWS.lote_rebanho).select('*').in('lote_id', loteIds)
-  ) ?? [];
+  return readThrough<LoteRebanho[]>(
+    `rebanho_multi:${loteIdsKey(loteIds)}`,
+    async () =>
+      unwrap<LoteRebanho[]>(
+        await supabase.from(VIEWS.lote_rebanho).select('*').in('lote_id', loteIds)
+      ) ?? [],
+    []
+  );
 }
 
 export async function listGmdLoteEvento(loteId: string): Promise<GmdLoteEvento[]> {
-  return unwrap<GmdLoteEvento[]>(
-    await supabase
-      .from(VIEWS.gmd_lote_evento)
-      .select('*')
-      .eq('lote_id', loteId)
-      .order('data_pesagem', { ascending: true })
-  ) ?? [];
+  return readThrough<GmdLoteEvento[]>(
+    `gmd_lote_evento:${loteId}`,
+    async () =>
+      unwrap<GmdLoteEvento[]>(
+        await supabase
+          .from(VIEWS.gmd_lote_evento)
+          .select('*')
+          .eq('lote_id', loteId)
+          .order('data_pesagem', { ascending: true })
+      ) ?? [],
+    []
+  );
 }
 
 export async function listTransacoesByLote(userId: string, loteId: string): Promise<Transacao[]> {
-  return unwrap<Transacao[]>(
-    await supabase
-      .from(TABLES.transacoes)
-      .select('*')
-      .eq('user_id', userId)
-      .eq('lote_id', loteId)
-      .order('data', { ascending: false })
-  ) ?? [];
+  return readThrough<Transacao[]>(
+    `transacoes_lote:${userId}:${loteId}`,
+    async () =>
+      unwrap<Transacao[]>(
+        await supabase
+          .from(TABLES.transacoes)
+          .select('*')
+          .eq('user_id', userId)
+          .eq('lote_id', loteId)
+          .order('data', { ascending: false })
+      ) ?? [],
+    []
+  );
 }
 
 export async function listComprasVendasByLote(loteId: string): Promise<CompraVenda[]> {
-  return unwrap<CompraVenda[]>(
-    await supabase
-      .from(TABLES.compras_vendas)
-      .select('*')
-      .eq('lote_id', loteId)
-      .order('created_at', { ascending: false })
-  ) ?? [];
+  return readThrough<CompraVenda[]>(
+    `compras_vendas_lote:${loteId}`,
+    async () =>
+      unwrap<CompraVenda[]>(
+        await supabase
+          .from(TABLES.compras_vendas)
+          .select('*')
+          .eq('lote_id', loteId)
+          .order('created_at', { ascending: false })
+      ) ?? [],
+    []
+  );
 }
 
 export async function listBaixasByLote(userId: string, loteId: string): Promise<Baixa[]> {
-  return unwrap<Baixa[]>(
-    await supabase
-      .from(TABLES.baixas)
-      .select('*')
-      .eq('user_id', userId)
-      .eq('lote_id', loteId)
-      .order('data_baixa', { ascending: false })
-  ) ?? [];
+  return readThrough<Baixa[]>(
+    `baixas_lote:${userId}:${loteId}`,
+    async () =>
+      unwrap<Baixa[]>(
+        await supabase
+          .from(TABLES.baixas)
+          .select('*')
+          .eq('user_id', userId)
+          .eq('lote_id', loteId)
+          .order('data_baixa', { ascending: false })
+      ) ?? [],
+    []
+  );
 }
 
 // ── Escritas (via RPC — garantem integridade + snapshot no servidor) ──────────

@@ -69,13 +69,13 @@ export default function Lotes() {
     if (!user) return;
     
     setLoading(true);
-    const [ativosRes, encerradosRes] = await Promise.all([
-      supabase.from(TABLES.lotes).select('*').eq('user_id', user.id).eq('status', 'ativo').order('data_entrada', { ascending: false }),
-      supabase.from(TABLES.lotes).select('*').eq('user_id', user.id).eq('status', 'encerrado').order('data_entrada', { ascending: false }),
+    const [ativos, encerrados] = await Promise.all([
+      loteRepo.listLotesByStatus(user.id, 'ativo'),
+      loteRepo.listLotesByStatus(user.id, 'encerrado'),
     ]);
 
-    if (ativosRes.data) setLotesAtivos(ativosRes.data as Lote[]);
-    if (encerradosRes.data) setLotesEncerrados(encerradosRes.data as Lote[]);
+    setLotesAtivos(ativos);
+    setLotesEncerrados(encerrados);
     setLoading(false);
   };
 
