@@ -1,0 +1,3 @@
+# As capturas do produto sao servidas direto pelo Vercel, que nao resolve
+# Git LFS. Guardamos estes PNGs como binario normal (sao pequenos, ~1 MB).
+*.png -filter -diff -merge -text
