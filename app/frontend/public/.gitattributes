@@ -1,0 +1,3 @@
+# Imagem de fundo servida direto pelo Vercel, que nao resolve Git LFS.
+# Guardar como binario normal para nao virar arquivo-ponteiro em producao.
+login-bg.png -filter -diff -merge -text
