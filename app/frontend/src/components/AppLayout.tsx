@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { useSync } from '@/hooks/useSync';
+import { startSync } from '@/lib/sync/engine';
 import { supabase, TABLES } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import {
@@ -76,6 +79,55 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signOut } = useAuth();
+  const isOnline = useOnlineStatus();
+  const { pending, syncing, failed } = useSync();
+
+  // Inicia o motor de sync uma vez: drena pendências e passa a drenar ao reconectar.
+  useEffect(() => {
+    startSync();
+  }, []);
+
+  // Estado do selo de conectividade/sincronização no cabeçalho.
+  const conn = (() => {
+    if (!isOnline) {
+      return {
+        label: pending > 0 ? `Offline · ${pending} pendente${pending === 1 ? '' : 's'}` : 'Offline',
+        chip: 'bg-amber-100 text-amber-900',
+        dot: 'bg-amber-500',
+        title: 'Sem conexão — as alterações serão sincronizadas ao reconectar',
+      };
+    }
+    if (syncing) {
+      return {
+        label: 'Sincronizando…',
+        chip: 'bg-sky-100 text-sky-900',
+        dot: 'bg-sky-500 animate-pulse',
+        title: 'Enviando alterações pendentes',
+      };
+    }
+    if (pending > 0) {
+      return {
+        label: `${pending} pendente${pending === 1 ? '' : 's'}`,
+        chip: 'bg-amber-100 text-amber-900',
+        dot: 'bg-amber-500',
+        title: 'Alterações aguardando sincronização',
+      };
+    }
+    if (failed > 0) {
+      return {
+        label: `${failed} com erro`,
+        chip: 'bg-danger-soft text-danger',
+        dot: 'bg-danger',
+        title: 'Algumas alterações falharam ao sincronizar',
+      };
+    }
+    return {
+      label: 'Conectado',
+      chip: 'bg-success-soft text-success',
+      dot: 'bg-success',
+      title: 'Conectado e sincronizado',
+    };
+  })();
 
   useEffect(() => {
     if (!user) return;
@@ -209,9 +261,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
           </div>
 
           <div className="flex items-center gap-2 min-w-0">
-            <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-success-soft text-success text-[11px] font-semibold px-2.5 py-1 shrink-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-success" />
-              Conectado
+            <span
+              className={`hidden sm:inline-flex items-center gap-1.5 rounded-full text-[11px] font-semibold px-2.5 py-1 shrink-0 ${conn.chip}`}
+              title={conn.title}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${conn.dot}`} />
+              {conn.label}
             </span>
             {profileStatus && (
               <span className="hidden sm:inline-flex items-center gap-1.5 min-w-0 max-w-[220px] truncate rounded-full bg-amber-100 text-amber-900 text-[11px] font-semibold px-2.5 py-1">

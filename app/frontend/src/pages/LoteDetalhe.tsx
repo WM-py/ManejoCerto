@@ -123,12 +123,18 @@ export default function LoteDetalhe() {
     setSavingBaixa(true);
     try {
       await loteRepo.registrarBaixa({
+        userId: user.id,
         loteId: lote.id,
         qtd: Number(baixaQtd),
         data: baixaData,
         motivo: baixaMotivo || 'Mortalidade',
       });
-      toast({ title: 'Baixa registrada!', description: `${baixaQtd} cabeça(s) - ${baixaMotivo || 'Mortalidade'}` });
+      toast({
+        title: navigator.onLine ? 'Baixa registrada!' : 'Baixa registrada (offline)',
+        description: navigator.onLine
+          ? `${baixaQtd} cabeça(s) - ${baixaMotivo || 'Mortalidade'}`
+          : 'Será sincronizada quando a conexão voltar.',
+      });
       setBaixaQtd('1');
       setBaixaMotivo('');
       setShowBaixaForm(false);
@@ -150,11 +156,15 @@ export default function LoteDetalhe() {
     setSavingPesagemLote(true);
     try {
       await loteRepo.registrarPesagemLoteTotal({
+        userId: user.id,
         loteId: lote.id,
         data: pesagemLoteData,
         pesoTotalKg: Number(pesagemLotePesoTotal),
       });
-      toast({ title: 'Pesagem do lote registrada!' });
+      toast({
+        title: navigator.onLine ? 'Pesagem do lote registrada!' : 'Pesagem registrada (offline)',
+        description: navigator.onLine ? undefined : 'Será sincronizada quando a conexão voltar.',
+      });
       setPesagemLotePesoTotal('');
       setShowPesagemLoteForm(false);
       await fetchData();

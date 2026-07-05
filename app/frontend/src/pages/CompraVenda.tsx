@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { supabase, TABLES, formatBRL, kgToArrobas } from '@/lib/supabase';
+import { formatBRL, kgToArrobas } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Lote, Pasto } from '@/lib/types';
 import * as loteRepo from '@/lib/repositories/loteRepo';
@@ -56,16 +56,18 @@ export default function CompraVenda() {
   }, [searchParams]);
 
   useEffect(() => {
+    if (!user) return;
     const fetchData = async () => {
-      const [lotesRes, pastosRes] = await Promise.all([
-        supabase.from(TABLES.lotes).select('*').eq('status', 'ativo').order('nome_lote'),
-        supabase.from(TABLES.pastos).select('*').order('nome_pasto'),
+      const [lotesData, pastosData] = await Promise.all([
+        loteRepo.listLotesByStatus(user.id, 'ativo'),
+        loteRepo.listPastos(user.id),
       ]);
-      if (lotesRes.data) setLotes(lotesRes.data as Lote[]);
-      if (pastosRes.data) setPastos(pastosRes.data as Pasto[]);
+      // Ordena por nome no seletor (o repo devolve por data de entrada).
+      setLotes([...lotesData].sort((a, b) => a.nome_lote.localeCompare(b.nome_lote)));
+      setPastos(pastosData);
     };
     fetchData();
-  }, []);
+  }, [user]);
 
   const calcularCategoria = (sexoParam: string, pesoTotal: number, qtd: number): string => {
     const pesoMedio = qtd > 0 ? pesoTotal / qtd : 0;
@@ -112,60 +114,42 @@ export default function CompraVenda() {
 
     const categoriaLote = calcularCategoria(sexo, Number(pesoTotalKg), Number(qtdCabecas));
 
+    const descricaoFinal = descricao || `${operacao === 'COMPRA' ? 'Compra' : 'Venda'} de ${qtdCabecas} cabeças`;
+
     setLoading(true);
     try {
-      let targetLoteId = loteId;
       let targetLoteName = nomeLote.trim();
 
       if (operacao === 'COMPRA') {
         const pesoEntradaKg = Number(pesoTotalKg) / Number(qtdCabecas);
-        // RPC transacional: cria o lote E gera N animais + vínculos (brinco provisório)
-        targetLoteId = await loteRepo.criarLoteComAnimais({
+        // Sequência transacional (cria lote + N animais + financeiro) via fila de sync.
+        await loteRepo.registrarCompra({
+          userId: user.id,
           nomeLote: nomeLote.trim(),
           qtdCabecas: Number(qtdCabecas),
+          pesoTotalKg: Number(pesoTotalKg),
           pesoEntradaKg,
+          valorTotal: Number(valorTotal),
+          valorPorArroba,
           dataEntrada: data,
           pastoId: pastoId && pastoId !== 'none' ? pastoId : null,
           sexo,
           categoria: categoriaLote,
+          descricao: descricaoFinal,
         });
       } else {
         const selectedLote = lotes.find((l) => l.id === loteId);
         if (selectedLote) targetLoteName = selectedLote.nome_lote;
-      }
-
-      const { data: transacao, error: transError } = await supabase
-        .from(TABLES.transacoes)
-        .insert({
-          user_id: user.id,
-          tipo: operacao === 'COMPRA' ? 'DESPESA' : 'RECEITA',
-          categoria: operacao === 'COMPRA' ? 'COMPRA_GADO' : 'VENDA_GADO',
-          valor: Number(valorTotal),
+        // Financeiro + saída (fecha vínculos) via fila de sync.
+        await loteRepo.registrarVenda({
+          userId: user.id,
+          loteId,
+          qtdCabecas: Number(qtdCabecas),
+          pesoTotalKg: Number(pesoTotalKg),
+          valorTotal: Number(valorTotal),
+          valorPorArroba,
           data,
-          lote_id: targetLoteId,
-          descricao: descricao || `${operacao === 'COMPRA' ? 'Compra' : 'Venda'} de ${qtdCabecas} cabeças`,
-        })
-        .select()
-        .single();
-
-      if (transError) throw transError;
-
-      const { error: cvError } = await supabase.from(TABLES.compras_vendas).insert({
-        transacao_id: transacao.id,
-        lote_id: targetLoteId,
-        qtd_cabecas: Number(qtdCabecas),
-        peso_total_kg: Number(pesoTotalKg),
-        valor_por_arroba: valorPorArroba,
-      });
-
-      if (cvError) throw cvError;
-
-      if (operacao === 'VENDA') {
-        // RPC: fecha N vínculos (motivo='venda'), marca animais e atualiza o cache
-        await loteRepo.registrarVendaSaida({
-          loteId: targetLoteId,
-          qtd: Number(qtdCabecas),
-          data,
+          descricao: descricaoFinal,
         });
       }
 
@@ -178,14 +162,19 @@ export default function CompraVenda() {
         valorTotal: Number(valorTotal),
         valorPorArroba,
         data,
-        descricao: descricao || `${operacao === 'COMPRA' ? 'Compra' : 'Venda'} de ${qtdCabecas} cabeças`,
+        descricao: descricaoFinal,
       });
 
+      const offline = !navigator.onLine;
       toast({
-        title: operacao === 'COMPRA' ? 'Compra registrada!' : 'Venda registrada!',
-        description: operacao === 'COMPRA'
-          ? `Lote "${nomeLote}" criado com ${qtdCabecas} cabeças`
-          : `${qtdCabecas} cabeças vendidas`,
+        title: operacao === 'COMPRA'
+          ? (offline ? 'Compra registrada (offline)' : 'Compra registrada!')
+          : (offline ? 'Venda registrada (offline)' : 'Venda registrada!'),
+        description: offline
+          ? 'Será sincronizada automaticamente quando a conexão voltar.'
+          : operacao === 'COMPRA'
+            ? `Lote "${nomeLote}" criado com ${qtdCabecas} cabeças`
+            : `${qtdCabecas} cabeças vendidas`,
       });
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';

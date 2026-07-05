@@ -124,15 +124,14 @@ export default function Dashboard() {
     const chartStart = new Date(now.getFullYear(), now.getMonth() - 5, 1).toISOString().split('T')[0];
     const chartEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
 
-    const [transRes, lotesRes, chartRes] = await Promise.all([
+    const [transRes, activeLotes, chartRes] = await Promise.all([
       query,
-      supabase.from(TABLES.lotes).select('*').eq('status', 'ativo').order('data_entrada', { ascending: false }),
+      loteRepo.listLotesByStatus(user.id, 'ativo'),
       supabase.from(TABLES.transacoes).select('*').gte('data', chartStart).lte('data', chartEnd),
     ]);
 
     if (transRes.data) setTransacoes(transRes.data as Transacao[]);
     if (chartRes.data) setChartTransacoes(chartRes.data as Transacao[]);
-    const activeLotes = (lotesRes.data || []) as Lote[];
     setLotes(activeLotes);
 
     if (activeLotes.length > 0) {

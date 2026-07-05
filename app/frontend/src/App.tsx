@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { Toaster } from '@/components/ui/toaster';
+import { PwaUpdater } from '@/components/PwaUpdater';
 import AppLayout from '@/components/AppLayout';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import Landing from '@/pages/Landing';
@@ -202,6 +203,7 @@ function App() {
         <AuthProvider>
           <AppRoutes />
           <Toaster />
+          <PwaUpdater />
         </AuthProvider>
       </BrowserRouter>
     </ErrorBoundary>
