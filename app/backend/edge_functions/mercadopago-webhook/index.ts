@@ -106,9 +106,16 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    // Mesma semântica do mc_grant_access: anual vence em 365 dias (trial_end
+    // é reaproveitado como data de expiração do plano); vitalício não vence.
+    const trialEnd =
+      plan === 'annual'
+        ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
+        : null;
+
     const { error } = await supabase
       .from(PROFILES_TABLE)
-      .update({ plan, plan_status: 'active', trial_end: null })
+      .update({ plan, plan_status: 'active', trial_end: trialEnd })
       .eq('id', userId);
     if (error) {
       console.error('Erro ao ativar plano no perfil', userId, error);
