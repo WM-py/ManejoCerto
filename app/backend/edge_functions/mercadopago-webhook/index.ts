@@ -1,94 +1,121 @@
 /**
  * Supabase Edge Function (Deno) — Mercado Pago webhook handler
- * - Recebe notificações do Mercado Pago
- * - Busca o pagamento na API do Mercado Pago para validar status
- * - Mapeia para um usuário (payment.metadata.user_id ou payer.email)
- * - Atualiza a tabela de perfis (`plan`, `plan_status`, `trial_end`)
  *
- * Environment variables required:
- * - SUPABASE_URL
- * - SUPABASE_SERVICE_ROLE_KEY
+ * Recebe notificações de pagamento do Mercado Pago, valida o pagamento na API
+ * oficial (fonte de verdade — não confia no corpo da notificação) e ativa o
+ * plano do usuário. O vínculo pagamento→usuário vem do `external_reference` /
+ * `metadata.user_id` gravados pela function `mp-create-checkout` ao criar a
+ * preferência.
+ *
+ * Deploy com verify_jwt=false: o Mercado Pago não envia JWT. A segurança vem
+ * de buscar o pagamento na API do MP com o nosso access token — uma notificação
+ * forjada precisaria de um payment id real, aprovado, da nossa conta.
+ *
+ * Env (SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY são injetados pela plataforma):
  * - MERCADO_PAGO_ACCESS_TOKEN
- * - (optional) SUPABASE_PROFILES_TABLE (defaults to app_34b6ab49dc_profiles)
+ * - (opcional) SUPABASE_PROFILES_TABLE (padrão app_34b6ab49dc_profiles)
  */
 
-import { serve } from 'std/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from 'npm:@supabase/supabase-js@2';
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
-const MP_TOKEN = Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN') || '';
-const PROFILES_TABLE = Deno.env.get('SUPABASE_PROFILES_TABLE') || 'app_34b6ab49dc_profiles';
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
+const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+const MP_TOKEN = Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN') ?? '';
+const PROFILES_TABLE = Deno.env.get('SUPABASE_PROFILES_TABLE') ?? 'app_34b6ab49dc_profiles';
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !MP_TOKEN) {
-  console.error('Missing required environment variables for mercadopago-webhook');
-}
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+  auth: { persistSession: false },
+});
 
-serve(async (req: Request) => {
+Deno.serve(async (req: Request) => {
+  // MP só notifica via POST; GET/HEAD respondem 200 para health checks.
   if (req.method !== 'POST') return new Response('ok', { status: 200 });
 
+  if (!MP_TOKEN) {
+    console.error('MERCADO_PAGO_ACCESS_TOKEN ausente');
+    return new Response('not configured', { status: 503 });
+  }
+
   try {
-    const body = await req.json().catch(() => ({}));
+    const url = new URL(req.url);
+    const body = await req.json().catch(() => ({} as Record<string, unknown>));
 
-    // Attempt to extract payment id from common webhook shapes
-    const paymentId = body?.data?.id || body?.id || body?.resource?.id;
-    if (!paymentId) return new Response('no payment id', { status: 400 });
+    // A notificação chega em formatos diferentes (webhook novo, IPN legado).
+    const kind = (
+      url.searchParams.get('type') ??
+      url.searchParams.get('topic') ??
+      (body as { type?: string; topic?: string; action?: string }).type ??
+      (body as { topic?: string }).topic ??
+      (body as { action?: string }).action ??
+      ''
+    ).toString();
 
-    // Fetch payment from Mercado Pago to validate status
+    const paymentId =
+      url.searchParams.get('data.id') ??
+      url.searchParams.get('id') ??
+      (body as { data?: { id?: string | number } }).data?.id ??
+      (body as { id?: string | number }).id;
+
+    // Só nos interessam eventos de pagamento (merchant_order etc. são ignorados).
+    if (!kind.includes('payment') || !paymentId) {
+      return new Response('ignored', { status: 200 });
+    }
+
+    // Fonte de verdade: busca o pagamento na API do Mercado Pago.
     const mpRes = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
       headers: { Authorization: `Bearer ${MP_TOKEN}` },
     });
     if (!mpRes.ok) {
-      console.error('Failed to fetch payment from Mercado Pago', mpRes.status);
+      console.error('Falha ao buscar pagamento no MP', paymentId, mpRes.status);
+      // 5xx faz o MP reenviar a notificação mais tarde.
       return new Response('mp fetch failed', { status: 502 });
     }
     const payment = await mpRes.json();
 
-    const status = (payment?.status || '').toString().toLowerCase();
-    if (status !== 'approved' && status !== 'paid') {
-      // Not a successful payment — ignore
+    const status = String(payment?.status ?? '').toLowerCase();
+    if (status !== 'approved') {
       return new Response('payment not approved', { status: 200 });
     }
 
-    // Try to resolve the Supabase user id
-    let userId: string | undefined = payment?.metadata?.user_id || payment?.external_reference || payment?.metadata?.external_reference;
+    // Vínculo com o usuário: metadata.user_id ou external_reference (uuid).
+    const candidate = String(
+      payment?.metadata?.user_id ?? payment?.external_reference ?? ''
+    );
+    if (!UUID_RE.test(candidate)) {
+      console.error('Pagamento aprovado sem user_id mapeável', {
+        paymentId,
+        external_reference: payment?.external_reference,
+        metadata: payment?.metadata,
+        payer_email: payment?.payer?.email,
+      });
+      // 200: reenviar não resolve; o caso fica no log para conciliação manual.
+      return new Response('no user mapping', { status: 200 });
+    }
+    const userId = candidate;
 
-    // Fallback: try payer email -> lookup user in auth.users
-    if (!userId && payment?.payer?.email) {
-      const payerEmail = payment.payer.email;
-      const { data: userRecord, error: listErr } = await supabase.from('users').select('id').eq('email', payerEmail).maybeSingle();
-      if (listErr) console.error('error finding user by email', listErr);
-      userId = (userRecord as any)?.id;
+    // Plano: metadata.plan da preferência; título do item como fallback.
+    let plan: 'annual' | 'lifetime' = 'annual';
+    const metaPlan = String(payment?.metadata?.plan ?? '').toLowerCase();
+    if (metaPlan === 'lifetime') plan = 'lifetime';
+    else if (metaPlan !== 'annual') {
+      const items = payment?.additional_info?.items ?? [];
+      if (Array.isArray(items) && items[0]?.title && /vital/i.test(String(items[0].title))) {
+        plan = 'lifetime';
+      }
     }
 
-    if (!userId) {
-      console.error('Could not map payment to a user', { paymentId, payment });
-      return new Response('no user mapping found', { status: 200 });
-    }
-
-    // Decide plan type: try preference / items info
-    let plan = 'annual';
-    try {
-      const prefId = payment.preference_id || '';
-      const lifetimePref = Deno.env.get('VITE_MP_LIFETIME_PREFERENCE_ID') || Deno.env.get('MERCADO_PAGO_LIFETIME_PREFERENCE_ID');
-      if (prefId && lifetimePref && prefId === lifetimePref) plan = 'lifetime';
-      // also check item titles
-      const items = payment?.additional_info?.items || payment?.items || [];
-      if (Array.isArray(items) && items[0]?.title && String(items[0].title).toLowerCase().includes('vital')) plan = 'lifetime';
-    } catch (e) {
-      // ignore
-    }
-
-    const updates: Record<string, unknown> = { plan, plan_status: 'active', trial_end: null };
-
-    const { error: updateErr } = await supabase.from(PROFILES_TABLE).update(updates).eq('id', userId);
-    if (updateErr) {
-      console.error('error updating profile', updateErr);
+    const { error } = await supabase
+      .from(PROFILES_TABLE)
+      .update({ plan, plan_status: 'active', trial_end: null })
+      .eq('id', userId);
+    if (error) {
+      console.error('Erro ao ativar plano no perfil', userId, error);
       return new Response('db update error', { status: 500 });
     }
 
+    console.log('Plano ativado', { userId, plan, paymentId });
     return new Response('ok', { status: 200 });
   } catch (err) {
     console.error('mercadopago-webhook error', err);

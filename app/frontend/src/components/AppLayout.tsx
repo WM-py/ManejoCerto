@@ -75,6 +75,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const [open, setOpen] = useState(false);
   const [nomeFazenda, setNomeFazenda] = useState('');
   const [profileStatus, setProfileStatus] = useState('');
+  const [isTrialing, setIsTrialing] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -156,6 +157,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
           const diffMs = trialEnd.getTime() - Date.now();
           const days = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
           setProfileStatus(`Teste grátis • ${days} dia${days === 1 ? '' : 's'} restantes`);
+          setIsTrialing(true);
           return;
         }
 
@@ -268,12 +270,21 @@ export default function AppLayout({ children }: AppLayoutProps) {
               <span className={`w-1.5 h-1.5 rounded-full ${conn.dot}`} />
               {conn.label}
             </span>
-            {profileStatus && (
+            {profileStatus && (isTrialing ? (
+              <button
+                onClick={() => navigate('/assinar')}
+                title="Ver planos e assinar"
+                className="hidden sm:inline-flex items-center gap-1.5 min-w-0 max-w-[260px] truncate rounded-full bg-amber-100 text-amber-900 hover:bg-amber-200 text-[11px] font-semibold px-2.5 py-1 transition-colors"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                <span className="truncate">{profileStatus} · Assinar</span>
+              </button>
+            ) : (
               <span className="hidden sm:inline-flex items-center gap-1.5 min-w-0 max-w-[220px] truncate rounded-full bg-amber-100 text-amber-900 text-[11px] font-semibold px-2.5 py-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                 <span className="truncate">{profileStatus}</span>
               </span>
-            )}
+            ))}
           </div>
         </div>
       </header>

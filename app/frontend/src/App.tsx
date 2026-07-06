@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { Toaster } from '@/components/ui/toaster';
 import { PwaUpdater } from '@/components/PwaUpdater';
@@ -7,8 +7,8 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import Landing from '@/pages/Landing';
 import Login from '@/pages/Login';
 import RedefinirSenha from '@/pages/RedefinirSenha';
-import { getMercadoPagoPreferenceUrl, hasMercadoPagoConfigured } from '@/lib/mercadopago';
 import Dashboard from '@/pages/Dashboard';
+import Assinar from '@/pages/Assinar';
 import NovoLancamento from '@/pages/NovoLancamento';
 import CompraVenda from '@/pages/CompraVenda';
 import LoteDetalhe from '@/pages/LoteDetalhe';
@@ -22,8 +22,6 @@ import Privacy from '@/pages/Privacy';
 
 function TrialGate({ children }: { children: React.ReactNode }) {
   const { user, profile, loading, profileLoading } = useAuth();
-  const annualCheckoutUrl = getMercadoPagoPreferenceUrl('annual');
-  const useMercadoPago = hasMercadoPagoConfigured();
 
   if (loading || profileLoading) {
     return (
@@ -59,32 +57,21 @@ function TrialGate({ children }: { children: React.ReactNode }) {
           <h1 className="text-2xl font-bold text-ink-900">Seu período de teste expirou</h1>
           <p className="mt-3 text-sm text-ink-600">
             O acesso ao Manejo Certo foi bloqueado porque o trial de 14 dias chegou ao fim.
-            Para continuar usando, escolha um plano ou entre em contato com o suporte.
+            Seus dados continuam guardados — escolha um plano para continuar de onde parou.
           </p>
           <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3">
             <a
-              href="/"
+              href="mailto:suporte@manejocerto.com.br"
               className="inline-flex h-12 items-center justify-center rounded-xl border border-ink-200 px-5 text-sm font-medium text-ink-700 hover:bg-ink-100"
             >
-              Voltar para Landing
+              Contatar suporte
             </a>
-            {useMercadoPago && annualCheckoutUrl ? (
-              <a
-                href={annualCheckoutUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex h-12 items-center justify-center rounded-xl bg-brand px-5 text-sm font-semibold text-white hover:bg-brand-700"
-              >
-                Comprar plano anual
-              </a>
-            ) : (
-              <a
-                href="mailto:suporte@manejocerto.com.br"
-                className="inline-flex h-12 items-center justify-center rounded-xl bg-brand px-5 text-sm font-semibold text-white hover:bg-brand-700"
-              >
-                Contatar suporte
-              </a>
-            )}
+            <Link
+              to="/assinar"
+              className="inline-flex h-12 items-center justify-center rounded-xl bg-brand px-5 text-sm font-semibold text-white hover:bg-brand-700"
+            >
+              Ver planos e pagar
+            </Link>
           </div>
         </div>
       </div>
@@ -92,6 +79,14 @@ function TrialGate({ children }: { children: React.ReactNode }) {
   }
 
   return <AppLayout>{children}</AppLayout>;
+}
+
+/** Exige apenas login — usada em /assinar, que precisa funcionar com trial expirado. */
+function RequireUser({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  return <>{children}</>;
 }
 
 function AppRoutes() {
@@ -188,6 +183,14 @@ function AppRoutes() {
           <TrialGate>
             <Admin />
           </TrialGate>
+        }
+      />
+      <Route
+        path="/assinar"
+        element={
+          <RequireUser>
+            <Assinar />
+          </RequireUser>
         }
       />
       <Route path="/privacidade" element={<Privacy />} />
