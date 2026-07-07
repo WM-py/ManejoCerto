@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import * as loteRepo from '@/lib/repositories/loteRepo';
 import type { AnimalVinculo } from '@/lib/types';
-import { Tag, Check, Loader2, Wifi } from 'lucide-react';
+import { Tag, Check, Loader2, Wifi, ListOrdered } from 'lucide-react';
 
 interface EtiquetarLoteSheetProps {
   open: boolean;
@@ -28,6 +28,15 @@ function semBrinco(v: AnimalVinculo): boolean {
   return !a?.brinco_visual && !a?.brinco_rfid;
 }
 
+/** Incrementa o sufixo numérico de um brinco, preservando prefixo e zeros à esquerda (ex: "BR0099" -> "BR0100"). */
+function proximoBrinco(brinco: string): string | null {
+  const m = brinco.match(/^(\D*)(\d+)$/);
+  if (!m) return null;
+  const [, prefixo, digitos] = m;
+  const proximo = (BigInt(digitos) + 1n).toString().padStart(digitos.length, '0');
+  return prefixo + proximo;
+}
+
 export function EtiquetarLoteSheet({
   open,
   onOpenChange,
@@ -41,6 +50,8 @@ export function EtiquetarLoteSheet({
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [tocou, setTocou] = useState(false);
+  const [sequenciaInicio, setSequenciaInicio] = useState('');
+  const [aplicandoSequencia, setAplicandoSequencia] = useState(false);
   const inputsRef = useRef<Record<string, HTMLInputElement | null>>({});
 
   const carregar = useCallback(async () => {
@@ -128,6 +139,66 @@ export function EtiquetarLoteSheet({
     [linhas, userId, toast, focarProximo]
   );
 
+  const aplicarSequencia = useCallback(async () => {
+    const inicio = sequenciaInicio.trim();
+    if (!inicio || !proximoBrinco(inicio)) {
+      toast({ title: 'Informe um número inicial válido (ex: 4478)', variant: 'destructive' });
+      return;
+    }
+    const alvos = linhas.filter((l) => !l.brincoVisual);
+    if (alvos.length === 0) return;
+
+    setAplicandoSequencia(true);
+    const usados = new Set(
+      linhas.filter((l) => l.brincoVisual).map((l) => l.brincoVisual as string)
+    );
+    let brinco = inicio;
+    let aplicados = 0;
+    try {
+      for (const l of alvos) {
+        if (usados.has(brinco)) {
+          toast({ title: `Brinco ${brinco} já usado — sequência interrompida`, variant: 'destructive' });
+          break;
+        }
+        setLinhas((cur) =>
+          cur.map((x) => (x.animalId === l.animalId ? { ...x, salvando: true } : x))
+        );
+        try {
+          await loteRepo.etiquetarAnimal({
+            userId,
+            animalId: l.animalId,
+            brincoVisual: brinco,
+            brincoRfid: null,
+          });
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : 'Erro desconhecido';
+          toast({ title: `Erro ao etiquetar brinco ${brinco}`, description: msg, variant: 'destructive' });
+          setLinhas((cur) =>
+            cur.map((x) => (x.animalId === l.animalId ? { ...x, salvando: false } : x))
+          );
+          break;
+        }
+        usados.add(brinco);
+        aplicados += 1;
+        setTocou(true);
+        setLinhas((cur) =>
+          cur.map((x) =>
+            x.animalId === l.animalId ? { ...x, brincoVisual: brinco, salvando: false } : x
+          )
+        );
+        const proximo = proximoBrinco(brinco);
+        if (!proximo) break;
+        brinco = proximo;
+      }
+    } finally {
+      setAplicandoSequencia(false);
+    }
+    if (aplicados > 0) {
+      toast({ title: `${aplicados} brinco${aplicados > 1 ? 's' : ''} aplicado${aplicados > 1 ? 's' : ''} em sequência` });
+      setSequenciaInicio('');
+    }
+  }, [sequenciaInicio, linhas, userId, toast]);
+
   const fechar = (v: boolean) => {
     if (!v && tocou) onDone();
     onOpenChange(v);
@@ -157,6 +228,36 @@ export function EtiquetarLoteSheet({
             </span>
           </div>
         </div>
+
+        {/* Numeração sequencial */}
+        {!loading && pendentes.length > 0 && (
+          <div className="px-5 py-3 border-b border-ink-200 bg-ink-50 flex items-center gap-2">
+            <ListOrdered className="w-4 h-4 text-ink-400 flex-shrink-0" />
+            <input
+              type="text"
+              inputMode="numeric"
+              placeholder="Brinco inicial (ex: 4478)"
+              value={sequenciaInicio}
+              onChange={(e) => setSequenciaInicio(e.target.value)}
+              disabled={aplicandoSequencia}
+              className="flex-1 h-8 rounded-md border border-ink-200 px-2.5 text-xs outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 disabled:opacity-50"
+            />
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => void aplicarSequencia()}
+              disabled={aplicandoSequencia || !sequenciaInicio.trim()}
+              className="h-8 rounded-md text-xs px-3 flex-shrink-0"
+            >
+              {aplicandoSequencia ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                'Aplicar sequência'
+              )}
+            </Button>
+          </div>
+        )}
 
         {/* Lista */}
         <div className="flex-1 overflow-y-auto">
@@ -198,7 +299,7 @@ export function EtiquetarLoteSheet({
                         defaultValue=""
                         inputMode="numeric"
                         placeholder="Brinco visual (ex: 4478)"
-                        disabled={l.salvando}
+                        disabled={l.salvando || aplicandoSequencia}
                         className="flex-1 h-9 rounded-md border border-ink-200 px-3 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
