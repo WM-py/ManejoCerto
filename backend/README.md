@@ -72,8 +72,60 @@ Detalhes:
 - Na confirmação de áudio, devolvemos o que foi ouvido (`🎙️ Ouvi: "..."`) para
   o produtor conferir, já que voz pode ser mal transcrita.
 
+## Fase 3: Gravação no Supabase (`repositorio.py`)
+
+Cada `acao` extraída vira INSERT/UPDATE nas tabelas do Manejo Certo
+(`animais`, `pesagens_animal`, `transacoes`), com dedup por `wamid`
+(`wpp_processados`) e resolução multi-tenant do dono via `whatsapp_vinculos`
+(código de pareamento gerado em Parâmetros → WhatsApp no app).
+
+## Deploy em produção (sair do laptop + ngrok)
+
+Hoje o serviço só roda localmente (`run.bat` + túnel ngrok), o que exige seu
+PC ligado e uma URL que muda a cada restart do túnel — inviável para clientes
+reais. Para produção, hospede como um serviço web comum (já tem `Procfile` e
+`.python-version` prontos):
+
+**Opção recomendada: Railway** (mais previsível, sem cold start — importante
+porque a Meta espera resposta rápida do webhook).
+1. Crie um projeto novo apontando para este repo, com **root directory
+   `backend/`**.
+2. Railway detecta Python via Nixpacks e usa o `Procfile` automaticamente.
+3. Configure as variáveis de ambiente (mesmas do `.env`, ver lista abaixo).
+4. Deploy gera uma URL pública HTTPS fixa (`https://SEU-APP.up.railway.app`).
+
+**Alternativa gratuita: Render** (free tier, mas o serviço "dorme" após
+inatividade e leva ~30-50s para acordar no primeiro request — risco de a
+Meta considerar o webhook lento/atrasado em rajadas pouco frequentes).
+Mesmo `Procfile`, root directory `backend/`.
+
+### Variáveis de ambiente no host (dashboard do Railway/Render)
+
+Copie os valores do seu `backend/.env` local — **não** commitar o `.env` em
+si (já é ignorado pelo git):
+
+| Variável | Necessária? |
+|---|---|
+| `OPENAI_API_KEY` | sim |
+| `OPENAI_MODEL`, `OPENAI_WHISPER_MODEL`, `RENDIMENTO_CARCACA` | opcional (têm padrão) |
+| `WHATSAPP_VERIFY_TOKEN` | sim |
+| `WHATSAPP_TOKEN` | sim — **trocar pelo token permanente** (System User no Meta Business Suite); o gerado em "API Setup" expira em ~24h e não serve para produção |
+| `WHATSAPP_PHONE_NUMBER_ID` | sim |
+| `WHATSAPP_APP_SECRET` | recomendado (valida assinatura dos webhooks) |
+| `WHATSAPP_API_VERSION` | opcional (padrão v21.0) |
+| `SUPABASE_URL` | sim |
+| `SUPABASE_SERVICE_ROLE_KEY` | sim |
+| `MANEJO_USER_ID` | **não precisa** — só usado no dry-run local sem banco; produção resolve o dono via `whatsapp_vinculos` |
+
+### Depois do deploy
+
+No painel **Meta > WhatsApp > Configuration**, troque a Callback URL do
+webhook de `https://SEU-TUNEL-NGROK/webhook` para
+`https://SEU-APP-EM-PRODUCAO/webhook`, mantendo o mesmo
+`WHATSAPP_VERIFY_TOKEN`. Teste com `GET /` (healthcheck) antes de recadastrar.
+
 ## Próximas fases
 
-3. **Gravação no Supabase** — mapear cada `acao` para INSERT/UPDATE
-   (falta criar tabela de vacinas; tratar deduplicação por `wamid` e
-   confirmação em lote na migração).
+- Confirmação em lote na migração de histórico (resumo "47 pesagens,
+  confirma?", em vez de 1 a 1).
+- Tabela própria de vacinas/sanidade (hoje grava como observação livre).
