@@ -17,6 +17,7 @@ WHATSAPP_VERIFY_TOKEN do seu .env.
 from __future__ import annotations
 
 import os
+import re
 
 from dotenv import load_dotenv
 from fastapi import BackgroundTasks, FastAPI, Request, Response
@@ -29,6 +30,37 @@ from transcricao import transcrever
 load_dotenv()
 
 app = FastAPI(title="Manejo Certo — Ingestão WhatsApp")
+
+# Fase 5 (mínima): a mensagem anterior já foi gravada assim que entendida — o
+# "Confere?" é só um retorno amigável, sem esperar resposta para persistir.
+# Aqui só evitamos responder "não entendi" para um "sim"/"confere" solto, que
+# senão vai parar no extrator LLM sem nenhuma ação para reconhecer.
+_CONFIRMACAO_POSITIVA = {
+    "sim", "s", "confere", "confirmado", "confirmo", "ok", "okay", "blz",
+    "beleza", "correto", "isso", "isso mesmo", "exato", "certo", "ta certo",
+    "tá certo", "esta certo", "está certo", "👍",
+}
+_CONFIRMACAO_NEGATIVA = {
+    "não", "nao", "n", "errado", "incorreto", "cancela", "cancelar", "errei",
+    "não confere", "nao confere", "não é isso", "nao e isso",
+}
+_NORMALIZAR_RE = re.compile(r"[^\w áàâãéêíóôõúüç]", re.IGNORECASE)
+
+
+def _classificar_confirmacao(texto: str) -> str | None:
+    """Reconhece um "sim"/"confere" (ou negativa) SOLTOS, sem mais nada na
+    frase. Mensagens mais longas (mesmo contendo essas palavras) seguem para
+    o extrator normalmente — evita falso positivo."""
+    bruto = texto.strip()
+    if bruto in _CONFIRMACAO_POSITIVA or bruto in _CONFIRMACAO_NEGATIVA:
+        return "positiva" if bruto in _CONFIRMACAO_POSITIVA else "negativa"
+
+    normalizado = _NORMALIZAR_RE.sub("", bruto).strip().lower()
+    if normalizado in _CONFIRMACAO_POSITIVA:
+        return "positiva"
+    if normalizado in _CONFIRMACAO_NEGATIVA:
+        return "negativa"
+    return None
 
 
 @app.get("/")
@@ -93,6 +125,21 @@ def processar_mensagem(msg: whatsapp.MensagemRecebida) -> None:
     user_id = repositorio.resolver_user_id(msg.de)
     if not user_id:
         _fluxo_nao_vinculado(msg, texto)
+        return
+
+    # 1.5) "sim"/"confere" solto não é um evento novo para o extrator — o
+    # registro anterior já foi gravado quando entendido, então só respondemos
+    # de forma amigável em vez de mandar pro LLM (que devolveria "não entendi").
+    confirmacao = _classificar_confirmacao(texto)
+    if confirmacao == "positiva":
+        whatsapp.enviar_texto(msg.de, "👍 Perfeito, já está registrado!")
+        return
+    if confirmacao == "negativa":
+        whatsapp.enviar_texto(
+            msg.de,
+            "Entendido! Me manda a informação certa que eu registro de novo "
+            "— ou corrija direto no app, se preferir. 🙏",
+        )
         return
 
     # 2) Cliente conhecido → entende e grava.
