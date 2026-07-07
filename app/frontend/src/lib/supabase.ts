@@ -52,6 +52,7 @@ export const VIEWS = {
 export const RPC = {
   criarLoteComAnimais: 'app_34b6ab49dc_criar_lote_com_animais',
   registrarPesagemLoteTotal: 'app_34b6ab49dc_registrar_pesagem_lote_total',
+  registrarPesagemIndividual: 'app_34b6ab49dc_registrar_pesagem_individual',
   registrarBaixa: 'app_34b6ab49dc_registrar_baixa',
   registrarVendaSaida: 'app_34b6ab49dc_registrar_venda_saida',
   excluirLote: 'app_34b6ab49dc_excluir_lote',

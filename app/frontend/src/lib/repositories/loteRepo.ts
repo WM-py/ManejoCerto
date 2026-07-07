@@ -21,6 +21,9 @@ import type {
   Baixa,
   PesagemEvento,
   GmdLoteEvento,
+  GmdAnimal,
+  GmdLoteIndividual,
+  AnimalVinculo,
   LoteRebanho,
 } from '@/lib/types';
 
@@ -171,6 +174,74 @@ export async function listGmdLoteEvento(loteId: string): Promise<GmdLoteEvento[]
   );
 }
 
+/** Animais ativos do lote (com identidade), para etiquetagem e pesagem individual. */
+export async function listAnimaisDoLote(loteId: string): Promise<AnimalVinculo[]> {
+  return readThrough<AnimalVinculo[]>(
+    `animais_lote:${loteId}`,
+    async () =>
+      unwrap<AnimalVinculo[]>(
+        await supabase
+          .from(TABLES.lote_animais)
+          .select(
+            'animal_id, data_entrada, peso_entrada_kg, animais(id, brinco_visual, brinco_rfid, sexo)'
+          )
+          .eq('lote_id', loteId)
+          .is('data_saida', null)
+          .is('deleted_at', null)
+          .order('created_at', { ascending: true })
+      ) ?? [],
+    []
+  );
+}
+
+/** Última pesagem individual de um animal (contexto do "peso anterior" no curral). */
+export async function getUltimoPesoAnimal(
+  animalId: string
+): Promise<{ peso: number; data: string } | null> {
+  const { data, error } = await supabase
+    .from(TABLES.pesagens_animal)
+    .select('peso_kg, data_pesagem')
+    .eq('animal_id', animalId)
+    .is('deleted_at', null)
+    .order('data_pesagem', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data ? { peso: Number(data.peso_kg), data: data.data_pesagem } : null;
+}
+
+/** GMD por animal do lote (view v_gmd_animal) — alimenta os badges por brinco. */
+export async function listGmdAnimalByLote(loteId: string): Promise<GmdAnimal[]> {
+  return readThrough<GmdAnimal[]>(
+    `gmd_animal_lote:${loteId}`,
+    async () =>
+      unwrap<GmdAnimal[]>(
+        await supabase
+          .from(VIEWS.gmd_animal)
+          .select('*')
+          .eq('lote_id', loteId)
+          .order('data_pesagem', { ascending: true })
+      ) ?? [],
+    []
+  );
+}
+
+/** GMD médio do lote via pesagens individuais (view v_gmd_lote_individual). */
+export async function listGmdLoteIndividual(loteId: string): Promise<GmdLoteIndividual[]> {
+  return readThrough<GmdLoteIndividual[]>(
+    `gmd_lote_individual:${loteId}`,
+    async () =>
+      unwrap<GmdLoteIndividual[]>(
+        await supabase
+          .from(VIEWS.gmd_lote_individual)
+          .select('*')
+          .eq('lote_id', loteId)
+          .order('data_pesagem', { ascending: true })
+      ) ?? [],
+    []
+  );
+}
+
 export async function listTransacoesByLote(userId: string, loteId: string): Promise<Transacao[]> {
   return readThrough<Transacao[]>(
     `transacoes_lote:${userId}:${loteId}`,
@@ -298,6 +369,38 @@ export async function registrarPesagemLoteTotal(input: {
     data: input.data,
     pesoTotalKg: input.pesoTotalKg,
     observacao: input.observacao ?? null,
+  });
+}
+
+/** Registra a pesagem individual de um animal (upsert por animal+dia no servidor). */
+export async function registrarPesagemIndividual(input: {
+  userId: string;
+  loteId: string;
+  animalId: string;
+  data: string;
+  pesoKg: number;
+}): Promise<void> {
+  await enqueue('PESAGEM_INDIVIDUAL', {
+    userId: input.userId,
+    loteId: input.loteId,
+    animalId: input.animalId,
+    data: input.data,
+    pesoKg: input.pesoKg,
+  });
+}
+
+/** Atribui/atualiza o brinco (visual e/ou RFID) de um animal. */
+export async function etiquetarAnimal(input: {
+  userId: string;
+  animalId: string;
+  brincoVisual: string | null;
+  brincoRfid: string | null;
+}): Promise<void> {
+  await enqueue('ETIQUETAR_ANIMAL', {
+    userId: input.userId,
+    animalId: input.animalId,
+    brincoVisual: input.brincoVisual,
+    brincoRfid: input.brincoRfid,
   });
 }
 

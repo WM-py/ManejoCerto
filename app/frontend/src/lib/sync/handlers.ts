@@ -12,6 +12,8 @@ import type {
   CompraPayload,
   VendaPayload,
   PesagemLotePayload,
+  PesagemIndividualPayload,
+  EtiquetarAnimalPayload,
   BaixaPayload,
   ExcluirLotePayload,
   IntentResult,
@@ -108,6 +110,28 @@ async function handlePesagemLote(p: PesagemLotePayload): Promise<void> {
   throwIf(error);
 }
 
+async function handlePesagemIndividual(p: PesagemIndividualPayload): Promise<void> {
+  const { error } = await supabase.rpc(RPC.registrarPesagemIndividual, {
+    p_lote_id: p.loteId,
+    p_animal_id: p.animalId,
+    p_data: p.data,
+    p_peso_kg: p.pesoKg,
+  });
+  throwIf(error);
+}
+
+async function handleEtiquetarAnimal(p: EtiquetarAnimalPayload): Promise<void> {
+  const { error } = await supabase
+    .from(TABLES.animais)
+    .update({ brinco_visual: p.brincoVisual, brinco_rfid: p.brincoRfid })
+    .eq('id', p.animalId)
+    .eq('user_id', p.userId);
+  if (error && (error as { code?: string }).code === '23505') {
+    throw new Error('Esse brinco já está em uso em outro animal.');
+  }
+  throwIf(error);
+}
+
 async function handleBaixa(p: BaixaPayload): Promise<void> {
   const { error } = await supabase.rpc(RPC.registrarBaixa, {
     p_lote_id: p.loteId,
@@ -132,6 +156,10 @@ export async function executeIntent(record: OutboxRecord): Promise<IntentResult 
       return handleVenda(record.payload as unknown as VendaPayload);
     case 'PESAGEM_LOTE':
       return handlePesagemLote(record.payload as unknown as PesagemLotePayload);
+    case 'PESAGEM_INDIVIDUAL':
+      return handlePesagemIndividual(record.payload as unknown as PesagemIndividualPayload);
+    case 'ETIQUETAR_ANIMAL':
+      return handleEtiquetarAnimal(record.payload as unknown as EtiquetarAnimalPayload);
     case 'BAIXA':
       return handleBaixa(record.payload as unknown as BaixaPayload);
     case 'EXCLUIR_LOTE':

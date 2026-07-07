@@ -22,6 +22,8 @@ import { useToast } from '@/hooks/use-toast';
 import { gerarReciboPDF } from '@/lib/pdf';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { ComprovanteButton } from '@/components/ComprovanteButton';
+import { EtiquetarLoteSheet } from '@/components/EtiquetarLoteSheet';
+import { PesagemIndividualSheet } from '@/components/PesagemIndividualSheet';
 import {
   ArrowLeft,
   Beef,
@@ -39,6 +41,7 @@ import {
   Skull,
   FileDown,
   Trash2,
+  Tag,
 } from 'lucide-react';
 
 export default function LoteDetalhe() {
@@ -63,6 +66,10 @@ export default function LoteDetalhe() {
   const [savingPesagemLote, setSavingPesagemLote] = useState(false);
   const [deletingEventoId, setDeletingEventoId] = useState<string | null>(null);
   const [eventoParaExcluir, setEventoParaExcluir] = useState<string | null>(null);
+
+  // Sheets do curral (Sprint 2)
+  const [showEtiquetar, setShowEtiquetar] = useState(false);
+  const [showPesagemIndividual, setShowPesagemIndividual] = useState(false);
 
   // Baixa
   const [showBaixaForm, setShowBaixaForm] = useState(false);
@@ -325,6 +332,17 @@ export default function LoteDetalhe() {
             </div>
           </div>
         </div>
+        {lote.status === 'ativo' && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setShowEtiquetar(true)}
+            className="h-9 rounded-md border-ink-200 text-ink-700 text-sm font-medium"
+          >
+            <Tag className="w-4 h-4 mr-1.5 text-brand" />
+            Etiquetar
+          </Button>
+        )}
       </div>
 
       {/* Stats strip */}
@@ -471,14 +489,25 @@ export default function LoteDetalhe() {
                 </div>
               </div>
               {lote.status === 'ativo' && (
-                <Button
-                  size="sm"
-                  onClick={() => setShowPesagemLoteForm(!showPesagemLoteForm)}
-                  className="h-8 rounded-md bg-brand hover:bg-brand-700 text-white text-xs font-medium"
-                >
-                  <Plus className="w-3.5 h-3.5 mr-1" />
-                  Nova pesagem
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowPesagemIndividual(true)}
+                    className="h-8 rounded-md border-ink-200 text-ink-700 text-xs font-medium"
+                  >
+                    <Scale className="w-3.5 h-3.5 mr-1 text-brand" />
+                    Individual
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => setShowPesagemLoteForm(!showPesagemLoteForm)}
+                    className="h-8 rounded-md bg-brand hover:bg-brand-700 text-white text-xs font-medium"
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-1" />
+                    Peso total
+                  </Button>
+                </div>
               )}
             </div>
 
@@ -831,6 +860,26 @@ export default function LoteDetalhe() {
           )}
         </section>
       </div>
+
+      {user && (
+        <>
+          <EtiquetarLoteSheet
+            open={showEtiquetar}
+            onOpenChange={setShowEtiquetar}
+            loteId={lote.id}
+            loteNome={lote.nome_lote}
+            userId={user.id}
+            onDone={fetchData}
+          />
+          <PesagemIndividualSheet
+            open={showPesagemIndividual}
+            onOpenChange={setShowPesagemIndividual}
+            loteId={lote.id}
+            userId={user.id}
+            onDone={fetchData}
+          />
+        </>
+      )}
 
       <ConfirmDialog
         open={eventoParaExcluir !== null}

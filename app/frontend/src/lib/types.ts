@@ -183,6 +183,14 @@ export interface PesagemAnimal {
   deleted_at: string | null;
 }
 
+/** Vínculo do animal no lote + campos de identidade (join lote_animais↔animais). */
+export interface AnimalVinculo {
+  animal_id: string;
+  data_entrada: string;
+  peso_entrada_kg: number | null;
+  animais: Pick<Animal, 'id' | 'brinco_visual' | 'brinco_rfid' | 'sexo'> | null;
+}
+
 // ── Views (somente leitura) ────────────────────────────────────────────────
 
 /** v_gmd_animal — GMD entre pesagens consecutivas do mesmo animal. */
@@ -203,6 +211,14 @@ export interface GmdLoteEvento {
   peso_medio: number;
   peso_medio_ant: number | null;
   gmd_kg_dia: number | null;
+}
+
+/** v_gmd_lote_individual — GMD médio do lote a partir das pesagens por animal. */
+export interface GmdLoteIndividual {
+  lote_id: string;
+  data_pesagem: string;
+  gmd_medio_kg_dia: number | null;
+  animais_considerados: number;
 }
 
 /** v_lote_rebanho — contagens de cabeças derivadas do vínculo (fonte de verdade). */
