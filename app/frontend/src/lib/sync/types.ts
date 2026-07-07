@@ -43,6 +43,21 @@ export interface PesagemLotePayload {
   observacao: string | null;
 }
 
+export interface PesagemIndividualPayload {
+  userId: string;
+  loteId: string;
+  animalId: string;
+  data: string;
+  pesoKg: number;
+}
+
+export interface EtiquetarAnimalPayload {
+  userId: string;
+  animalId: string;
+  brincoVisual: string | null;
+  brincoRfid: string | null;
+}
+
 export interface BaixaPayload {
   userId: string;
   loteId: string;
@@ -60,6 +75,8 @@ export type IntentPayloadMap = {
   COMPRA: CompraPayload;
   VENDA: VendaPayload;
   PESAGEM_LOTE: PesagemLotePayload;
+  PESAGEM_INDIVIDUAL: PesagemIndividualPayload;
+  ETIQUETAR_ANIMAL: EtiquetarAnimalPayload;
   BAIXA: BaixaPayload;
   EXCLUIR_LOTE: ExcluirLotePayload;
 };

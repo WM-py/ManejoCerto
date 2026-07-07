@@ -20,7 +20,14 @@ export interface CacheEntry {
 }
 
 /** Tipos de intenção de escrita enfileirados (fluxo de curral). */
-export type OutboxKind = 'COMPRA' | 'VENDA' | 'PESAGEM_LOTE' | 'BAIXA' | 'EXCLUIR_LOTE';
+export type OutboxKind =
+  | 'COMPRA'
+  | 'VENDA'
+  | 'PESAGEM_LOTE'
+  | 'PESAGEM_INDIVIDUAL'
+  | 'ETIQUETAR_ANIMAL'
+  | 'BAIXA'
+  | 'EXCLUIR_LOTE';
 
 export type OutboxStatus = 'pending' | 'syncing' | 'failed';
 
