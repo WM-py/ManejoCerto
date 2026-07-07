@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { gerarRelatorioPDF, gerarRelatorioCSV, fetchNomeUsuario, type RelatorioData } from '@/lib/pdf';
 import { toast } from 'sonner';
@@ -21,6 +23,7 @@ import {
   BarChart3,
   Pencil,
   Trash2,
+  ChevronDown,
 } from 'lucide-react';
 import {
   PieChart,
@@ -312,25 +315,58 @@ export default function Relatorios() {
           </div>
           <div>
             <Label className="text-xs font-semibold text-ink-700 uppercase tracking-wider">Categorias</Label>
-            <div className="flex flex-wrap gap-1.5 mt-1.5">
-              {ALL_CATEGORIAS.map((cat) => {
-                const isSelected = selectedCategorias.has(cat);
-                return (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => toggleCategoria(cat)}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors border ${
-                      isSelected
-                        ? 'bg-brand text-white border-brand'
-                        : 'bg-white text-ink-500 border-ink-200 hover:border-ink-400 hover:text-ink-700'
-                    }`}
-                  >
-                    {CATEGORIA_LABELS[cat]}
-                  </button>
-                );
-              })}
-            </div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="mt-1.5 h-9 w-full sm:w-64 px-3 rounded-md border border-ink-200 bg-white text-sm text-ink-700 hover:border-ink-400 flex items-center justify-between gap-2"
+                >
+                  <span className="truncate">
+                    {selectedCategorias.size === ALL_CATEGORIAS.length
+                      ? 'Todas categorias'
+                      : selectedCategorias.size === 1
+                      ? CATEGORIA_LABELS[[...selectedCategorias][0]]
+                      : `${selectedCategorias.size} categorias selecionadas`}
+                  </span>
+                  <ChevronDown className="w-4 h-4 text-ink-400 flex-shrink-0" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 p-2" align="start">
+                <div className="flex items-center justify-between px-1 pb-2 mb-1 border-b border-ink-200">
+                  <span className="text-xs font-medium text-ink-500">{selectedCategorias.size} de {ALL_CATEGORIAS.length}</span>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCategorias(new Set(ALL_CATEGORIAS))}
+                      className="text-xs font-medium text-brand hover:underline"
+                    >
+                      Todas
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCategorias(new Set([ALL_CATEGORIAS[0]]))}
+                      className="text-xs font-medium text-ink-500 hover:underline"
+                    >
+                      Limpar
+                    </button>
+                  </div>
+                </div>
+                <div className="max-h-64 overflow-y-auto space-y-0.5">
+                  {ALL_CATEGORIAS.map((cat) => (
+                    <label
+                      key={cat}
+                      className="flex items-center gap-2 px-1.5 py-1.5 rounded hover:bg-ink-100/60 cursor-pointer text-sm text-ink-700"
+                    >
+                      <Checkbox
+                        checked={selectedCategorias.has(cat)}
+                        onCheckedChange={() => toggleCategoria(cat)}
+                      />
+                      {CATEGORIA_LABELS[cat]}
+                    </label>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
       </section>
