@@ -5,6 +5,10 @@ import { Transacao, CATEGORIA_LABELS, CategoriaTransacao } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { gerarRelatorioPDF, gerarRelatorioCSV, fetchNomeUsuario, type RelatorioData } from '@/lib/pdf';
 import { toast } from 'sonner';
 import {
@@ -15,6 +19,8 @@ import {
   FileDown,
   Sheet,
   BarChart3,
+  Pencil,
+  Trash2,
 } from 'lucide-react';
 import {
   PieChart,
@@ -47,6 +53,16 @@ export default function Relatorios() {
   const [transacoes, setTransacoes] = useState<Transacao[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [transacaoEmEdicao, setTransacaoEmEdicao] = useState<Transacao | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [transacaoParaExcluir, setTransacaoParaExcluir] = useState<Transacao | null>(null);
+  const [excluindoTransacao, setExcluindoTransacao] = useState(false);
+  const [editValor, setEditValor] = useState('');
+  const [editData, setEditData] = useState(new Date().toISOString().split('T')[0]);
+  const [editCategoria, setEditCategoria] = useState<CategoriaTransacao>('OUTROS');
+  const [editTipo, setEditTipo] = useState<'RECEITA' | 'DESPESA'>('DESPESA');
+  const [editDescricao, setEditDescricao] = useState('');
+
   const fetchData = useCallback(async () => {
     if (!user) return;
     setLoading(true);
@@ -54,6 +70,7 @@ export default function Relatorios() {
     const { data, error } = await supabase
       .from(TABLES.transacoes)
       .select('*')
+      .is('deleted_at', null)
       .gte('data', dataInicial)
       .lte('data', dataFinal)
       .order('data', { ascending: false });
@@ -67,6 +84,72 @@ export default function Relatorios() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const handleEditClick = (t: Transacao) => {
+    setTransacaoEmEdicao(t);
+    setEditValor(String(t.valor));
+    setEditData(t.data);
+    setEditCategoria(t.categoria as CategoriaTransacao);
+    setEditTipo(t.tipo);
+    setEditDescricao(t.descricao);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateTransacao = async () => {
+    if (!transacaoEmEdicao || !user) return;
+
+    const dadosAtualizados = {
+      valor: Number(editValor),
+      data: editData,
+      categoria: editCategoria,
+      tipo: editTipo,
+      descricao: editDescricao,
+    };
+
+    const { error } = await supabase
+      .from(TABLES.transacoes)
+      .update(dadosAtualizados)
+      .eq('id', transacaoEmEdicao.id)
+      .eq('user_id', user.id);
+
+    if (error) {
+      toast.error(`Erro ao editar transação: ${error.message}`);
+      return;
+    }
+
+    toast.success('Transação atualizada com sucesso!');
+    setIsEditDialogOpen(false);
+    setTransacaoEmEdicao(null);
+    fetchData();
+  };
+
+  const confirmarExclusaoTransacao = async () => {
+    if (!transacaoParaExcluir || !user) return;
+    setExcluindoTransacao(true);
+    const { data, error } = await supabase
+      .from(TABLES.transacoes)
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', transacaoParaExcluir.id)
+      .eq('user_id', user.id)
+      .is('deleted_at', null)
+      .select('id');
+    setExcluindoTransacao(false);
+
+    if (error) {
+      toast.error(`Erro ao excluir transação: ${error.message}`);
+      return;
+    }
+    if (!data || data.length === 0) {
+      toast.error('Lançamento não encontrado. Ele pode já ter sido excluído.');
+      setTransacaoParaExcluir(null);
+      fetchData();
+      return;
+    }
+
+    toast.success('Lançamento excluído com sucesso!');
+    setTransacaoParaExcluir(null);
+    fetchData();
+  };
 
   const toggleCategoria = (cat: CategoriaTransacao) => {
     setSelectedCategorias((prev) => {
@@ -361,11 +444,31 @@ export default function Relatorios() {
                         <p className="text-xs text-ink-500 mt-0.5 truncate">{t.descricao}</p>
                       )}
                     </div>
-                    <span className={`text-sm font-semibold tabular-nums whitespace-nowrap flex-shrink-0 ${
-                      t.tipo === 'RECEITA' ? 'text-success' : 'text-danger'
-                    }`}>
-                      {t.tipo === 'RECEITA' ? '+' : '−'} {formatBRL(Number(t.valor))}
-                    </span>
+                    <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                      <span className={`text-sm font-semibold tabular-nums whitespace-nowrap ${
+                        t.tipo === 'RECEITA' ? 'text-success' : 'text-danger'
+                      }`}>
+                        {t.tipo === 'RECEITA' ? '+' : '−'} {formatBRL(Number(t.valor))}
+                      </span>
+                      <div className="flex items-center gap-0.5">
+                        <button
+                          type="button"
+                          onClick={() => handleEditClick(t)}
+                          className="p-1.5 rounded hover:bg-ink-200"
+                          title="Editar"
+                        >
+                          <Pencil className="w-3.5 h-3.5 text-ink-500" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setTransacaoParaExcluir(t)}
+                          className="p-1.5 rounded hover:bg-danger-soft"
+                          title="Excluir"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 text-danger" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </li>
               ))}
@@ -381,11 +484,12 @@ export default function Relatorios() {
                     <th className="text-left py-2.5 px-4 text-[10.5px] font-semibold text-ink-500 uppercase tracking-wider">Categoria</th>
                     <th className="text-right py-2.5 px-4 text-[10.5px] font-semibold text-ink-500 uppercase tracking-wider">Valor</th>
                     <th className="text-left py-2.5 px-4 text-[10.5px] font-semibold text-ink-500 uppercase tracking-wider hidden md:table-cell">Descrição</th>
+                    <th className="text-right py-2.5 px-4 text-[10.5px] font-semibold text-ink-500 uppercase tracking-wider">Ações</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-ink-200">
                   {filtered.map((t) => (
-                    <tr key={t.id} className="hover:bg-ink-100/30 transition-colors">
+                    <tr key={t.id} className="hover:bg-ink-100/30 transition-colors group">
                       <td className="py-3 px-4 text-xs text-ink-700 tabular-nums whitespace-nowrap">{formatDate(t.data)}</td>
                       <td className="py-3 px-4">
                         <Badge
@@ -410,6 +514,26 @@ export default function Relatorios() {
                       <td className="py-3 px-4 text-xs text-ink-500 max-w-[280px] truncate hidden md:table-cell">
                         {t.descricao || '—'}
                       </td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center justify-end gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            type="button"
+                            onClick={() => handleEditClick(t)}
+                            className="p-1.5 rounded hover:bg-ink-200"
+                            title="Editar"
+                          >
+                            <Pencil className="w-3.5 h-3.5 text-ink-500" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setTransacaoParaExcluir(t)}
+                            className="p-1.5 rounded hover:bg-danger-soft"
+                            title="Excluir"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-danger" />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -419,6 +543,73 @@ export default function Relatorios() {
           )}
         </section>
       </div>
+
+      <ConfirmDialog
+        open={transacaoParaExcluir !== null}
+        onOpenChange={(o) => !o && setTransacaoParaExcluir(null)}
+        title="Excluir lançamento"
+        description={
+          transacaoParaExcluir
+            ? `Deseja excluir "${transacaoParaExcluir.descricao || CATEGORIA_LABELS[transacaoParaExcluir.categoria as CategoriaTransacao]}" (${formatBRL(Number(transacaoParaExcluir.valor))})? Esta ação não pode ser desfeita.`
+            : undefined
+        }
+        confirmLabel="Excluir"
+        destructive
+        loading={excluindoTransacao}
+        onConfirm={confirmarExclusaoTransacao}
+      />
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar lançamento</DialogTitle>
+            <DialogDescription>Atualize os dados da transação.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3 pt-2">
+            <div>
+              <Label>Valor (R$)</Label>
+              <Input type="number" step="0.01" min="0" value={editValor} onChange={(e) => setEditValor(e.target.value)} />
+            </div>
+            <div>
+              <Label>Data</Label>
+              <Input type="date" value={editData} onChange={(e) => setEditData(e.target.value)} />
+            </div>
+            <div>
+              <Label>Tipo</Label>
+              <Select value={editTipo} onValueChange={(v) => setEditTipo(v as 'RECEITA' | 'DESPESA')}>
+                <SelectTrigger className="h-10 rounded-md border-ink-200">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="RECEITA">Receita</SelectItem>
+                  <SelectItem value="DESPESA">Despesa</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Categoria</Label>
+              <Select value={editCategoria} onValueChange={(v) => setEditCategoria(v as CategoriaTransacao)}>
+                <SelectTrigger className="h-10 rounded-md border-ink-200">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(CATEGORIA_LABELS).map(([key, label]) => (
+                    <SelectItem key={key} value={key as CategoriaTransacao}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Descrição</Label>
+              <Input value={editDescricao} onChange={(e) => setEditDescricao(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleUpdateTransacao} className="bg-brand hover:bg-brand-700">Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

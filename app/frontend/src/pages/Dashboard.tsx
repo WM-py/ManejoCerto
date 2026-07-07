@@ -111,6 +111,7 @@ export default function Dashboard() {
     let query = supabase
       .from(TABLES.transacoes)
       .select('*')
+      .is('deleted_at', null)
       .gte('data', start)
       .lte('data', end)
       .order('data', { ascending: false });
@@ -127,7 +128,7 @@ export default function Dashboard() {
     const [transRes, activeLotes, chartRes] = await Promise.all([
       query,
       loteRepo.listLotesByStatus(user.id, 'ativo'),
-      supabase.from(TABLES.transacoes).select('*').gte('data', chartStart).lte('data', chartEnd),
+      supabase.from(TABLES.transacoes).select('*').is('deleted_at', null).gte('data', chartStart).lte('data', chartEnd),
     ]);
 
     if (transRes.data) setTransacoes(transRes.data as Transacao[]);
@@ -166,13 +167,25 @@ export default function Dashboard() {
   }, [fetchData]);
 
   const confirmarExclusaoTransacao = async () => {
-    if (!transacaoParaExcluir) return;
+    if (!transacaoParaExcluir || !user) return;
     setExcluindoTransacao(true);
-    const { error } = await supabase.from(TABLES.transacoes).delete().eq('id', transacaoParaExcluir.id);
+    const { data, error } = await supabase
+      .from(TABLES.transacoes)
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', transacaoParaExcluir.id)
+      .eq('user_id', user.id)
+      .is('deleted_at', null)
+      .select('id');
     setExcluindoTransacao(false);
 
     if (error) {
       toast({ title: 'Erro ao excluir transação', description: error.message, variant: 'destructive' });
+      return;
+    }
+    if (!data || data.length === 0) {
+      toast({ title: 'Lançamento não encontrado', description: 'Ele pode já ter sido excluído.', variant: 'destructive' });
+      setTransacaoParaExcluir(null);
+      fetchData();
       return;
     }
 
@@ -192,7 +205,7 @@ export default function Dashboard() {
   };
 
   const handleUpdateTransacao = async () => {
-    if (!transacaoEmEdicao) return;
+    if (!transacaoEmEdicao || !user) return;
 
     const dadosAtualizados = {
       valor: Number(editValor),
@@ -205,7 +218,8 @@ export default function Dashboard() {
     const { error } = await supabase
       .from(TABLES.transacoes)
       .update(dadosAtualizados)
-      .eq('id', transacaoEmEdicao.id);
+      .eq('id', transacaoEmEdicao.id)
+      .eq('user_id', user.id);
 
     if (error) {
       toast({ title: 'Erro ao editar transação', description: error.message, variant: 'destructive' });

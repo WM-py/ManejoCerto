@@ -252,6 +252,7 @@ export async function listTransacoesByLote(userId: string, loteId: string): Prom
           .select('*')
           .eq('user_id', userId)
           .eq('lote_id', loteId)
+          .is('deleted_at', null)
           .order('data', { ascending: false })
       ) ?? [],
     []
