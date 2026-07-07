@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { formatBRL, kgToArrobas } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { Lote, Pasto } from '@/lib/types';
+import { Lote, Pasto, SexoLote, calcularCategoria } from '@/lib/types';
 import * as loteRepo from '@/lib/repositories/loteRepo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -70,21 +70,9 @@ export default function CompraVenda() {
     fetchData();
   }, [user]);
 
-  const calcularCategoria = (sexoParam: string, pesoTotal: number, qtd: number): string => {
+  const categoriaDoLote = (sexoParam: string, pesoTotal: number, qtd: number): string => {
     const pesoMedio = qtd > 0 ? pesoTotal / qtd : 0;
-    const sexoUpper = sexoParam;
-
-    if (sexoUpper === 'Misto') return 'Lote Misto';
-    if (sexoUpper === 'Macho') {
-      if (pesoMedio <= 210) return 'Bezerros';
-      if (pesoMedio <= 360) return 'Garrotes';
-      return 'Bois';
-    }
-
-    // Fêmea
-    if (pesoMedio <= 210) return 'Bezerras';
-    if (pesoMedio <= 300) return 'Novilhas';
-    return 'Vacas';
+    return calcularCategoria(sexoParam as SexoLote, pesoMedio);
   };
 
   const arrobas = pesoTotalKg ? kgToArrobas(Number(pesoTotalKg)) : 0;
@@ -113,7 +101,7 @@ export default function CompraVenda() {
       return;
     }
 
-    const categoriaLote = calcularCategoria(sexo, Number(pesoTotalKg), Number(qtdCabecas));
+    const categoriaLote = categoriaDoLote(sexo, Number(pesoTotalKg), Number(qtdCabecas));
 
     const descricaoFinal = descricao || `${operacao === 'COMPRA' ? 'Compra' : 'Venda'} de ${qtdCabecas} cabeças`;
 

@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { formatBRL, formatDate, kgToArrobas, daysBetween } from '@/lib/supabase';
+import { calcularDRE, calcularPesoAtualMedio } from '@/lib/dre';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Lote,
@@ -219,42 +220,27 @@ export default function LoteDetalhe() {
   const totalBaixas = rebanho?.cabecas_baixa ?? baixas.reduce((sum, b) => sum + b.quantidade, 0);
   const cabecasVivas = rebanho?.cabecas_vivas ?? (lote.qtd_cabecas - lote.qtd_cabecas_vendidas);
 
-  // ── DRE ──
-  const receitasDiretas = transacoes
-    .filter((t) => t.tipo === 'RECEITA')
-    .reduce((sum, t) => sum + Number(t.valor), 0);
+  // ── DRE (cálculo puro e testado em lib/dre.ts) ──
+  const pesoAtualMedio = calcularPesoAtualMedio(eventosLote, lote.peso_entrada_kg);
 
-  const custoCompra = transacoes
-    .filter((t) => t.tipo === 'DESPESA' && t.categoria === 'COMPRA_GADO')
-    .reduce((sum, t) => sum + Number(t.valor), 0);
-
-  const custosOperacionais = transacoes
-    .filter((t) => t.tipo === 'DESPESA' && t.categoria !== 'COMPRA_GADO')
-    .reduce((sum, t) => sum + Number(t.valor), 0);
-
-  const custoAcumulado = custoCompra + custosOperacionais;
-
-  // Peso atual: última pesagem de lote total, usando o SNAPSHOT congelado de cabeças
-  let pesoAtualMedio = 0;
-  const lastEvento = eventosLote.length > 0 ? eventosLote[eventosLote.length - 1] : null;
-  if (lastEvento && lastEvento.peso_total_kg && lastEvento.qtd_cabecas_pesadas) {
-    pesoAtualMedio = Number(lastEvento.peso_total_kg) / Number(lastEvento.qtd_cabecas_pesadas);
-  } else {
-    pesoAtualMedio = Number(lote.peso_entrada_kg) || 0;
-  }
-
-  const custoPorCabecaViva = cabecasVivas > 0 ? custoAcumulado / cabecasVivas : 0;
-  const arrobasRestantes = kgToArrobas(pesoAtualMedio * cabecasVivas);
-  const pontoEquilibrio = arrobasRestantes > 0 ? custoAcumulado / arrobasRestantes : 0;
-
-  const lucroLiquido = receitasDiretas - custoAcumulado;
-  const lucroPorCabeca = lote.qtd_cabecas > 0 ? lucroLiquido / lote.qtd_cabecas : 0;
-  const margemLucro = receitasDiretas > 0 ? (lucroLiquido / receitasDiretas) * 100 : 0;
-
-  const lucroProjetado =
-    lote.status === 'ativo' && pontoEquilibrio > 0
-      ? arrobasRestantes * pontoEquilibrio * 1.15 - custoAcumulado
-      : 0;
+  const {
+    receitasDiretas,
+    custoCompra,
+    custosOperacionais,
+    custoAcumulado,
+    custoPorCabecaViva,
+    pontoEquilibrio,
+    lucroLiquido,
+    lucroPorCabeca,
+    margemLucro,
+    lucroProjetado,
+  } = calcularDRE({
+    transacoes,
+    loteStatus: lote.status,
+    qtdCabecas: lote.qtd_cabecas,
+    cabecasVivas,
+    pesoAtualMedioKg: pesoAtualMedio,
+  });
 
   // GMD do lote: última entrada com GMD calculado na view
   const gmdComValor = gmdLote.filter((g) => g.gmd_kg_dia != null);
