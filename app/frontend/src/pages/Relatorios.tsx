@@ -70,18 +70,23 @@ export default function Relatorios() {
     if (!user) return;
     setLoading(true);
 
-    const { data, error } = await supabase
-      .from(TABLES.transacoes)
-      .select('*')
-      .is('deleted_at', null)
-      .gte('data', dataInicial)
-      .lte('data', dataFinal)
-      .order('data', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from(TABLES.transacoes)
+        .select('*')
+        .is('deleted_at', null)
+        .gte('data', dataInicial)
+        .lte('data', dataFinal)
+        .order('data', { ascending: false });
 
-    if (!error && data) {
-      setTransacoes(data as Transacao[]);
+      if (error) throw error;
+      if (data) setTransacoes(data as Transacao[]);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro desconhecido';
+      toast.error(`Erro ao carregar relatório: ${msg}`);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [user, dataInicial, dataFinal]);
 
   useEffect(() => {

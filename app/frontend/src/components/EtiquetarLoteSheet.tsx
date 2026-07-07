@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import * as loteRepo from '@/lib/repositories/loteRepo';
@@ -214,7 +214,7 @@ export function EtiquetarLoteSheet({
         <div className="px-5 py-4 border-b border-ink-200">
           <div className="flex items-center gap-2 mb-1">
             <Tag className="w-4 h-4 text-brand" strokeWidth={2.4} />
-            <h2 className="text-base font-semibold text-ink-900">Etiquetar animais</h2>
+            <SheetTitle className="text-base font-semibold text-ink-900">Etiquetar animais</SheetTitle>
           </div>
           <p className="text-xs text-ink-500">
             {loteNome} · digite o brinco e pressione Enter para avançar

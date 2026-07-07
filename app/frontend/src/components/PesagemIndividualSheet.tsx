@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -169,7 +169,7 @@ export function PesagemIndividualSheet({
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <Scale className="w-4 h-4 text-brand" strokeWidth={2.4} />
-              <h2 className="text-base font-semibold text-ink-900">Pesagem individual</h2>
+              <SheetTitle className="text-base font-semibold text-ink-900">Pesagem individual</SheetTitle>
             </div>
             <Input
               type="date"

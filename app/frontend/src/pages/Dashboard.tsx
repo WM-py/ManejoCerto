@@ -106,61 +106,66 @@ export default function Dashboard() {
     if (!user) return;
     setLoading(true);
 
-    const { start, end } = getDateRange();
+    try {
+      const { start, end } = getDateRange();
 
-    let query = supabase
-      .from(TABLES.transacoes)
-      .select('*')
-      .is('deleted_at', null)
-      .gte('data', start)
-      .lte('data', end)
-      .order('data', { ascending: false });
+      let query = supabase
+        .from(TABLES.transacoes)
+        .select('*')
+        .is('deleted_at', null)
+        .gte('data', start)
+        .lte('data', end)
+        .order('data', { ascending: false });
 
-    if (filterCategoria !== 'ALL') {
-      query = query.eq('categoria', filterCategoria);
-    }
+      if (filterCategoria !== 'ALL') {
+        query = query.eq('categoria', filterCategoria);
+      }
 
-    // Janela de 6 meses para o gráfico, independente do filtro de período acima.
-    const now = new Date();
-    const chartStart = new Date(now.getFullYear(), now.getMonth() - 5, 1).toISOString().split('T')[0];
-    const chartEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+      // Janela de 6 meses para o gráfico, independente do filtro de período acima.
+      const now = new Date();
+      const chartStart = new Date(now.getFullYear(), now.getMonth() - 5, 1).toISOString().split('T')[0];
+      const chartEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
 
-    const [transRes, activeLotes, chartRes] = await Promise.all([
-      query,
-      loteRepo.listLotesByStatus(user.id, 'ativo'),
-      supabase.from(TABLES.transacoes).select('*').is('deleted_at', null).gte('data', chartStart).lte('data', chartEnd),
-    ]);
-
-    if (transRes.data) setTransacoes(transRes.data as Transacao[]);
-    if (chartRes.data) setChartTransacoes(chartRes.data as Transacao[]);
-    setLotes(activeLotes);
-
-    if (activeLotes.length > 0) {
-      const loteIds = activeLotes.map((l) => l.id);
-      const [eventos, rebanhos] = await Promise.all([
-        loteRepo.listEventosPesagemByLotes(user.id, loteIds),
-        loteRepo.getRebanhoByLotes(loteIds),
+      const [transRes, activeLotes, chartRes] = await Promise.all([
+        query,
+        loteRepo.listLotesByStatus(user.id, 'ativo'),
+        supabase.from(TABLES.transacoes).select('*').is('deleted_at', null).gte('data', chartStart).lte('data', chartEnd),
       ]);
 
-      const evMap: Record<string, PesagemEvento[]> = {};
-      eventos
-        .filter((e) => e.tipo === 'lote_total')
-        .forEach((e) => {
-          if (!evMap[e.lote_id]) evMap[e.lote_id] = [];
-          evMap[e.lote_id].push(e);
-        });
-      setEventosMap(evMap);
+      if (transRes.data) setTransacoes(transRes.data as Transacao[]);
+      if (chartRes.data) setChartTransacoes(chartRes.data as Transacao[]);
+      setLotes(activeLotes);
 
-      const rMap: Record<string, LoteRebanho> = {};
-      rebanhos.forEach((r) => { rMap[r.lote_id] = r; });
-      setRebanhoMap(rMap);
-    } else {
-      setEventosMap({});
-      setRebanhoMap({});
+      if (activeLotes.length > 0) {
+        const loteIds = activeLotes.map((l) => l.id);
+        const [eventos, rebanhos] = await Promise.all([
+          loteRepo.listEventosPesagemByLotes(user.id, loteIds),
+          loteRepo.getRebanhoByLotes(loteIds),
+        ]);
+
+        const evMap: Record<string, PesagemEvento[]> = {};
+        eventos
+          .filter((e) => e.tipo === 'lote_total')
+          .forEach((e) => {
+            if (!evMap[e.lote_id]) evMap[e.lote_id] = [];
+            evMap[e.lote_id].push(e);
+          });
+        setEventosMap(evMap);
+
+        const rMap: Record<string, LoteRebanho> = {};
+        rebanhos.forEach((r) => { rMap[r.lote_id] = r; });
+        setRebanhoMap(rMap);
+      } else {
+        setEventosMap({});
+        setRebanhoMap({});
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro desconhecido';
+      toast({ title: 'Erro ao carregar dados', description: msg, variant: 'destructive' });
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
-  }, [user, getDateRange, filterCategoria]);
+  }, [user, getDateRange, filterCategoria, toast]);
 
   useEffect(() => {
     fetchData();
