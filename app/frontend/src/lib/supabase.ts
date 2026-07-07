@@ -37,6 +37,7 @@ export const TABLES = {
   lote_animais: 'app_34b6ab49dc_lote_animais',
   pesagem_eventos: 'app_34b6ab49dc_pesagem_eventos',
   pesagens_animal: 'app_34b6ab49dc_pesagens_animal',
+  whatsapp_vinculos: 'app_34b6ab49dc_whatsapp_vinculos',
 } as const;
 
 // Views (somente leitura)

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Save, Settings2, Trash2, Plus, X } from 'lucide-react';
+import WhatsAppVinculo from './WhatsAppVinculo';
 
 export default function Parametros() {
   const { user } = useAuth();
@@ -145,6 +146,9 @@ export default function Parametros() {
           </Button>
         )}
       </div>
+
+      {/* Conexão com o WhatsApp (registro por mensagem) */}
+      <WhatsAppVinculo />
 
       {/* Add new form */}
       {showNew && (
