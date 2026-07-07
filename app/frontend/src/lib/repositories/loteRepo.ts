@@ -183,7 +183,7 @@ export async function listAnimaisDoLote(loteId: string): Promise<AnimalVinculo[]
         await supabase
           .from(TABLES.lote_animais)
           .select(
-            'animal_id, data_entrada, peso_entrada_kg, animais(id, brinco_visual, brinco_rfid, sexo)'
+            `animal_id, data_entrada, peso_entrada_kg, animais:${TABLES.animais}(id, brinco_visual, brinco_rfid, sexo)`
           )
           .eq('lote_id', loteId)
           .is('data_saida', null)
@@ -313,6 +313,7 @@ export async function registrarCompra(input: {
   sexo?: string;
   categoria?: string | null;
   descricao: string;
+  contraparte?: string | null;
 }): Promise<void> {
   await enqueue('COMPRA', {
     userId: input.userId,
@@ -328,6 +329,7 @@ export async function registrarCompra(input: {
     sexo: input.sexo ?? 'Misto',
     categoria: input.categoria ?? null,
     descricao: input.descricao,
+    contraparte: input.contraparte?.trim() || null,
   });
 }
 
@@ -343,6 +345,7 @@ export async function registrarVenda(input: {
   valorPorArroba: number;
   data: string;
   descricao: string;
+  contraparte?: string | null;
 }): Promise<void> {
   await enqueue('VENDA', {
     userId: input.userId,
@@ -353,6 +356,7 @@ export async function registrarVenda(input: {
     valorPorArroba: input.valorPorArroba,
     data: input.data,
     descricao: input.descricao,
+    contraparte: input.contraparte?.trim() || null,
   });
 }
 

@@ -22,6 +22,7 @@ export interface CompraPayload {
   sexo: string;
   categoria: string | null;
   descricao: string;
+  contraparte: string | null;
 }
 
 export interface VendaPayload {
@@ -33,6 +34,7 @@ export interface VendaPayload {
   valorPorArroba: number;
   data: string;
   descricao: string;
+  contraparte: string | null;
 }
 
 export interface PesagemLotePayload {

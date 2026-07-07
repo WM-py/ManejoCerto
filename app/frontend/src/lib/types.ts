@@ -103,6 +103,7 @@ export interface CompraVenda {
   qtd_cabecas: number;
   peso_total_kg: number;
   valor_por_arroba: number;
+  contraparte: string | null;
   created_at: string;
 }
 

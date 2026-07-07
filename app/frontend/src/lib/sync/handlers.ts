@@ -60,6 +60,7 @@ async function handleCompra(p: CompraPayload): Promise<IntentResult> {
     qtd_cabecas: p.qtdCabecas,
     peso_total_kg: p.pesoTotalKg,
     valor_por_arroba: p.valorPorArroba,
+    contraparte: p.contraparte,
   });
   throwIf(cvErr);
 
@@ -88,6 +89,7 @@ async function handleVenda(p: VendaPayload): Promise<void> {
     qtd_cabecas: p.qtdCabecas,
     peso_total_kg: p.pesoTotalKg,
     valor_por_arroba: p.valorPorArroba,
+    contraparte: p.contraparte,
   });
   throwIf(cvErr);
 

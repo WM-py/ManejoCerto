@@ -26,6 +26,7 @@ export default function CompraVenda() {
   const [valorTotal, setValorTotal] = useState('');
   const [data, setData] = useState(new Date().toISOString().split('T')[0]);
   const [descricao, setDescricao] = useState('');
+  const [contraparte, setContraparte] = useState('');
   const [loteId, setLoteId] = useState('');
   const [pastoId, setPastoId] = useState('');
   const [lotes, setLotes] = useState<Lote[]>([]);
@@ -136,6 +137,7 @@ export default function CompraVenda() {
           sexo,
           categoria: categoriaLote,
           descricao: descricaoFinal,
+          contraparte,
         });
       } else {
         const selectedLote = lotes.find((l) => l.id === loteId);
@@ -150,6 +152,7 @@ export default function CompraVenda() {
           valorPorArroba,
           data,
           descricao: descricaoFinal,
+          contraparte,
         });
       }
 
@@ -443,6 +446,19 @@ export default function CompraVenda() {
                 </div>
               </div>
             )}
+
+            <div>
+              <Label className="text-xs font-semibold text-ink-700 uppercase tracking-wider">
+                {operacao === 'COMPRA' ? 'Fornecedor' : 'Comprador'}{' '}
+                <span className="text-ink-400 normal-case font-medium">(opcional)</span>
+              </Label>
+              <Input
+                placeholder={operacao === 'COMPRA' ? 'Ex: Fazenda São João' : 'Ex: Frigorífico ABC'}
+                value={contraparte}
+                onChange={(e) => setContraparte(e.target.value)}
+                className="h-10 mt-1.5 rounded-md border-ink-200"
+              />
+            </div>
 
             <div>
               <Label className="text-xs font-semibold text-ink-700 uppercase tracking-wider">
