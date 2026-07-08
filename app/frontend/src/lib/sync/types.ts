@@ -73,6 +73,22 @@ export interface ExcluirLotePayload {
   loteId: string;
 }
 
+export interface LancamentoPayload {
+  userId: string;
+  tipo: 'RECEITA' | 'DESPESA';
+  categoria: string;
+  valor: number;
+  data: string;
+  loteId: string | null;
+  descricao: string;
+  /**
+   * Comprovante anexado (File sobrevive ao IndexedDB via structured clone).
+   * O path é gerado no enfileiramento para o replay ser idempotente (upsert).
+   */
+  comprovante: File | null;
+  comprovantePath: string | null;
+}
+
 export type IntentPayloadMap = {
   COMPRA: CompraPayload;
   VENDA: VendaPayload;
@@ -81,6 +97,7 @@ export type IntentPayloadMap = {
   ETIQUETAR_ANIMAL: EtiquetarAnimalPayload;
   BAIXA: BaixaPayload;
   EXCLUIR_LOTE: ExcluirLotePayload;
+  LANCAMENTO: LancamentoPayload;
 };
 
 export type IntentPayload = IntentPayloadMap[OutboxKind];

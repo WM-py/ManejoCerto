@@ -19,7 +19,7 @@ export interface CacheEntry {
   updatedAt: number;
 }
 
-/** Tipos de intenção de escrita enfileirados (fluxo de curral). */
+/** Tipos de intenção de escrita enfileirados (fluxo de curral + financeiro). */
 export type OutboxKind =
   | 'COMPRA'
   | 'VENDA'
@@ -27,7 +27,8 @@ export type OutboxKind =
   | 'PESAGEM_INDIVIDUAL'
   | 'ETIQUETAR_ANIMAL'
   | 'BAIXA'
-  | 'EXCLUIR_LOTE';
+  | 'EXCLUIR_LOTE'
+  | 'LANCAMENTO';
 
 export type OutboxStatus = 'pending' | 'syncing' | 'failed';
 

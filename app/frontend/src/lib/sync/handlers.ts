@@ -6,7 +6,7 @@
  * Sprint 0. Um handler pode retornar um IntentResult (mapa tempId→id real)
  * quando cria uma entidade nova no servidor (caso da COMPRA → lote).
  */
-import { supabase, TABLES, RPC } from '@/lib/supabase';
+import { supabase, TABLES, RPC, COMPROVANTES_BUCKET } from '@/lib/supabase';
 import type { OutboxRecord } from '@/lib/cache/db';
 import type {
   CompraPayload,
@@ -16,6 +16,7 @@ import type {
   EtiquetarAnimalPayload,
   BaixaPayload,
   ExcluirLotePayload,
+  LancamentoPayload,
   IntentResult,
 } from './types';
 
@@ -149,6 +150,34 @@ async function handleExcluirLote(p: ExcluirLotePayload): Promise<void> {
   throwIf(error);
 }
 
+async function handleLancamento(p: LancamentoPayload): Promise<void> {
+  // 1) Comprovante primeiro (se houver). Path fixo + upsert = replay idempotente.
+  let comprovantePath: string | null = null;
+  if (p.comprovante && p.comprovantePath) {
+    const { error: upErr } = await supabase.storage
+      .from(COMPROVANTES_BUCKET)
+      .upload(p.comprovantePath, p.comprovante, {
+        contentType: p.comprovante.type || undefined,
+        upsert: true,
+      });
+    if (upErr) throw new Error(`Falha ao enviar o comprovante: ${upErr.message}`);
+    comprovantePath = p.comprovantePath;
+  }
+
+  // 2) Transação financeira.
+  const { error } = await supabase.from(TABLES.transacoes).insert({
+    user_id: p.userId,
+    tipo: p.tipo,
+    categoria: p.categoria,
+    valor: p.valor,
+    data: p.data,
+    lote_id: p.loteId,
+    descricao: p.descricao,
+    comprovante_path: comprovantePath,
+  });
+  throwIf(error);
+}
+
 /** Executa a intenção no servidor. Retorna IntentResult quando há id novo a reconciliar. */
 export async function executeIntent(record: OutboxRecord): Promise<IntentResult | void> {
   switch (record.kind) {
@@ -166,6 +195,8 @@ export async function executeIntent(record: OutboxRecord): Promise<IntentResult 
       return handleBaixa(record.payload as unknown as BaixaPayload);
     case 'EXCLUIR_LOTE':
       return handleExcluirLote(record.payload as unknown as ExcluirLotePayload);
+    case 'LANCAMENTO':
+      return handleLancamento(record.payload as unknown as LancamentoPayload);
     default: {
       // Exhaustiveness: força erro de compilação se surgir um kind novo.
       const _never: never = record.kind;

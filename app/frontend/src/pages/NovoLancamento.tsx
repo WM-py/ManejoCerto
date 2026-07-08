@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase, TABLES, formatBRL, maskBRLInput, parseBRLInput, uploadComprovante } from '@/lib/supabase';
+import { formatBRL, maskBRLInput, parseBRLInput } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Lote, CATEGORIA_LABELS, CategoriaTransacao } from '@/lib/types';
+import * as loteRepo from '@/lib/repositories/loteRepo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -43,16 +44,14 @@ export default function NovoLancamento() {
   const comprovanteRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    if (!user) return;
     const fetchLotes = async () => {
-      const { data: lotesData } = await supabase
-        .from(TABLES.lotes)
-        .select('*')
-        .eq('status', 'ativo')
-        .order('nome_lote');
-      if (lotesData) setLotes(lotesData as Lote[]);
+      // Cache-first (funciona offline); ordena por nome no seletor.
+      const lotesData = await loteRepo.listLotesByStatus(user.id, 'ativo');
+      setLotes([...lotesData].sort((a, b) => a.nome_lote.localeCompare(b.nome_lote)));
     };
     fetchLotes();
-  }, []);
+  }, [user]);
 
   // Autofoco no campo Valor (é o mais importante desta tela).
   useEffect(() => {
@@ -113,31 +112,25 @@ export default function NovoLancamento() {
     setErrors({});
     setLoading(true);
     try {
-      // Sobe o comprovante antes de gravar (se houver).
-      let comprovantePath: string | null = null;
-      if (comprovante) {
-        comprovantePath = await uploadComprovante(user.id, comprovante);
-        if (!comprovantePath) {
-          throw new Error('Falha ao enviar o comprovante. Tente novamente.');
-        }
-      }
-
-      const { error } = await supabase.from(TABLES.transacoes).insert({
-        user_id: user.id,
+      // Via fila de sync: online grava na hora; offline fica pendente e
+      // sincroniza (comprovante incluso) quando a conexão voltar.
+      await loteRepo.registrarLancamento({
+        userId: user.id,
         tipo,
         categoria,
         valor: valorNumerico,
         data,
-        lote_id: vincularLote && loteId ? loteId : null,
+        loteId: vincularLote && loteId ? loteId : null,
         descricao: descricao.trim(),
-        comprovante_path: comprovantePath,
+        comprovante,
       });
 
-      if (error) throw error;
-
+      const offline = !navigator.onLine;
       toast({
-        title: 'Lançamento registrado!',
-        description: `${tipo === 'RECEITA' ? 'Receita' : 'Despesa'} de ${formatBRL(valorNumerico)}`,
+        title: offline ? 'Lançamento registrado (offline)' : 'Lançamento registrado!',
+        description: offline
+          ? 'Será sincronizado automaticamente quando a conexão voltar.'
+          : `${tipo === 'RECEITA' ? 'Receita' : 'Despesa'} de ${formatBRL(valorNumerico)}`,
       });
 
       if (continuar) {

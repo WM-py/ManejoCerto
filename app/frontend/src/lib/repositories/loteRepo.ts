@@ -360,6 +360,36 @@ export async function registrarVenda(input: {
   });
 }
 
+/**
+ * Registra um lançamento financeiro avulso (receita/despesa) via fila de sync.
+ * O comprovante (se houver) viaja no outbox como File e sobe no replay.
+ */
+export async function registrarLancamento(input: {
+  userId: string;
+  tipo: 'RECEITA' | 'DESPESA';
+  categoria: string;
+  valor: number;
+  data: string;
+  loteId?: string | null;
+  descricao: string;
+  comprovante?: File | null;
+}): Promise<void> {
+  const comprovante = input.comprovante ?? null;
+  // Path gerado aqui (uma vez) para o upload do replay ser idempotente.
+  const ext = comprovante ? (comprovante.name.split('.').pop() || 'bin').toLowerCase() : null;
+  await enqueue('LANCAMENTO', {
+    userId: input.userId,
+    tipo: input.tipo,
+    categoria: input.categoria,
+    valor: input.valor,
+    data: input.data,
+    loteId: input.loteId ?? null,
+    descricao: input.descricao,
+    comprovante,
+    comprovantePath: comprovante ? `${input.userId}/${crypto.randomUUID()}.${ext}` : null,
+  });
+}
+
 /** Registra pesagem de lote total. O snapshot de cabeças é calculado no servidor. */
 export async function registrarPesagemLoteTotal(input: {
   userId: string;
