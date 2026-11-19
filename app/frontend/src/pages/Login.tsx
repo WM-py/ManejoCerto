@@ -1,5 +1,5 @@
 import { FormEvent, ReactNode, useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -393,6 +393,15 @@ export default function Login() {
                 ? 'Quero testar agora'
                 : 'Enviar link de recuperação'}
             </Button>
+
+            {mode === 'signup' && (
+              <p className="text-xs text-center text-ink-500 mt-3">
+                Ao criar a conta você concorda com os{' '}
+                <Link to="/termos" target="_blank" className="font-semibold text-brand hover:underline">Termos de Uso</Link>
+                {' '}e a{' '}
+                <Link to="/privacidade" target="_blank" className="font-semibold text-brand hover:underline">Política de Privacidade</Link>.
+              </p>
+            )}
 
             {mode === 'signup' && (
               <div className="rounded-3xl border border-ink-200 bg-ink-50 p-4 text-sm text-ink-700 mt-4">

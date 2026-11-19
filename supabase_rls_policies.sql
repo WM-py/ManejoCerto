@@ -31,10 +31,9 @@ FOR UPDATE
 USING (auth.uid() = id)
 WITH CHECK (auth.uid() = id);
 
-CREATE POLICY "Users can delete their own profile"
-ON app_34b6ab49dc_profiles
-FOR DELETE
-USING (auth.uid() = id);
+-- Sem policy de DELETE de propósito: apagar e recriar o perfil reiniciava o
+-- trial. As colunas de plano são protegidas por triggers — ver
+-- supabase_migration_protege_plano.sql.
 
 -- ============================================================================
 -- 2. LOTES - Gerenciamento de lotes de gado

@@ -492,6 +492,7 @@ export default function Landing() {
           </div>
           <div className="flex items-center gap-6 text-sm text-ink-500">
             <a href={WHATSAPP} target="_blank" rel="noopener noreferrer" className="hover:text-brand transition-colors">Suporte</a>
+            <Link to="/termos" className="hover:text-brand transition-colors">Termos</Link>
             <Link to="/privacidade" className="hover:text-brand transition-colors">Privacidade</Link>
             <Link to="/login" className="hover:text-brand transition-colors">Entrar</Link>
           </div>
