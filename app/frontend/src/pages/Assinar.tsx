@@ -134,6 +134,10 @@ export default function Assinar() {
           <p className="text-xs text-ink-500 flex items-center justify-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5" /> Pagamento processado pelo Mercado Pago · seus dados protegidos
           </p>
+          <p className="text-xs text-ink-500">
+            Pagamento único, sem renovação automática. Reembolso integral em até 7 dias. Ao pagar você concorda com os{' '}
+            <Link to="/termos" target="_blank" className="font-semibold text-brand hover:underline">Termos de Uso</Link>.
+          </p>
           <p className="text-sm text-ink-600">
             Prefere fechar com a nossa equipe?{' '}
             <a href={WHATSAPP_COMERCIAL} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand hover:underline">
